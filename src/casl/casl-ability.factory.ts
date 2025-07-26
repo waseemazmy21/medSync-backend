@@ -26,11 +26,11 @@ export class CaslAbilityFactory {
       cannot('create', User, { role: UserRole.Admin });
     }
     if (user.role === UserRole.DepartmentManager) {
-      can('create', User, {});
+      // can create users with the same department id
+      can('create', User, { dept_id: user.dept_id });
+      can('update', User, { dept_id: user.dept_id });
     } else {
-      can('read', 'all');
-      can('update', User, { authorId: user._id });
-      can('delete', User, { authorId: user._id });
+      can('read', User, { _id: user._id });
     }
 
     return build({
