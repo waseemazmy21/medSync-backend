@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
 import { DepartmentModule } from './department/department.module';
+import { CaslModule } from './casl/casl.module';
 
 @Module({
   imports: [
@@ -13,13 +14,14 @@ import { DepartmentModule } from './department/department.module';
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>('MONGODB_URI'),
       }),
-      inject: [ConfigService]
+      inject: [ConfigService],
     }),
     UserModule,
-    DepartmentModule
+    DepartmentModule,
+    CaslModule,
   ],
   controllers: [AppController],
   providers: [AppService],
