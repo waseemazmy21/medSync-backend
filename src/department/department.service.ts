@@ -1,8 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { Department } from './schemas/Department.schema';
-import { Model, model } from 'mongoose';
+import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
@@ -11,27 +11,31 @@ export class DepartmentService {
   constructor(@InjectModel(Department.name) private readonly departmentModel: Model<Department>) { }
 
   create(createDepartmentDto: CreateDepartmentDto) {
-    const dept = new this.departmentModel(createDepartmentDto);
-    dept.save();
-    return {
-      message: 'Department created successfully',
-      data: dept,
-    };
+    const created = new this.departmentModel(createDepartmentDto);
+    return created.save();
   }
 
   findAll() {
-    return `This action returns all department`;
+    return this.departmentModel.find().exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} department`;
+  async findOne(id: string) {
+    const department = await this.departmentModel.findById(id).exec();
+    if (!department) throw new NotFoundException('Department not found');
+    return department;
   }
 
-  update(id: number, updateDepartmentDto: UpdateDepartmentDto) {
-    return `This action updates a #${id} department`;
+  async update(id: string, updateDepartmentDto: UpdateDepartmentDto) {
+    const updated = await this.departmentModel
+      .findByIdAndUpdate(id, updateDepartmentDto, { new: true })
+      .exec();
+    if (!updated) throw new NotFoundException('Department not found');
+    return updated;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} department`;
+  async remove(id: string) {
+    const deleted = await this.departmentModel.findByIdAndDelete(id).exec();
+    if (!deleted) throw new NotFoundException('Department not found');
+    return deleted;
   }
 }
