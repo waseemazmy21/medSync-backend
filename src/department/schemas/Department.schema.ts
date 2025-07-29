@@ -12,7 +12,7 @@ export class Department {
     description: string;
 
     @Prop()
-    image?: string;
+    image: string;
 
     @Prop({ default: 0, min: 0, max: 5 })
     averageRating: number;
