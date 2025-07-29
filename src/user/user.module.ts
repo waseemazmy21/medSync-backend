@@ -7,6 +7,7 @@ import { Patient, PatientSchema } from './schemas/Patient.schema';
 import { Doctor, DoctorSchema } from './schemas/Doctor.schema';
 import { Nurse, NurseSchema } from './schemas/Nurse.schema';
 import { Staff, StaffSchema } from './schemas/Staff.schema';
+import { CaslAbilityFactory } from 'src/casl/casl-ability.factory';
 
 @Module({
   imports: [
@@ -20,10 +21,11 @@ import { Staff, StaffSchema } from './schemas/Staff.schema';
           { name: Nurse.name, schema: NurseSchema },
           { name: Staff.name, schema: StaffSchema }
         ]
-      }
-    ])
+      },
+    ]),
   ],
+
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService,  CaslAbilityFactory,],
 })
 export class UserModule { }

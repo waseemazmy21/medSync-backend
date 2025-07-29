@@ -11,12 +11,9 @@ export enum UserRole {
 
 @Schema({
   timestamps: true,
-  discriminatorKey: 'role',
+  // discriminatorKey: 'role',
 })
 export class User {
-  _id: string; // automatically mapped from _id
-  @Prop({ required: true })
-  dept_id: string;
   @Prop({ required: true, minlength: 3, maxlength: 30 })
   name: string;
 
@@ -32,8 +29,16 @@ export class User {
   @Prop({ enum: ['male', 'female'] })
   gender: 'male' | 'female';
 
-  @Prop({ enum: UserRole, required: true })
+  @Prop({
+    required: true,
+    enum: UserRole,
+    default: UserRole.Patient,
+  })
+  @Prop()  
   role: UserRole;
+
+  @Prop()
+  _id?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

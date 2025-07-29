@@ -24,13 +24,10 @@ export class CaslAbilityFactory {
       can('manage', 'all');
       // Cannot create user with the role Admin
       cannot('create', User, { role: UserRole.Admin });
-    }
-    if (user.role === UserRole.DepartmentManager) {
-      // can create users with the same department id
-      can('create', User, { dept_id: user.dept_id });
-      can('update', User, { dept_id: user.dept_id });
     } else {
+      // Only allow reading and updating own user data
       can('read', User, { _id: user._id });
+      can('update', User, { _id: user._id });
     }
 
     return build({

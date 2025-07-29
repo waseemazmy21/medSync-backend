@@ -26,4 +26,4 @@ import { CaslModule } from './casl/casl.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
