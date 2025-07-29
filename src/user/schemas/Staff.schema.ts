@@ -1,29 +1,29 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import mongoose, { Document } from "mongoose";
-import { User } from "./User.schema";
-import { Shift } from "src/common/types";
-import { Department } from "src/department/schemas/Department.schema";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import mongoose, { Document } from 'mongoose';
+import { User } from './User.schema';
+import { Shift } from 'src/common/types';
+import { Department } from 'src/department/schemas/Department.schema';
 
 export type StaffDocument = Staff & Document;
 
 @Schema({ timestamps: true })
 export class Staff extends User {
-    @Prop({
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Department',
-        required: true,
-    })
-    departmentId: Department;
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+    required: true,
+  })
+  departmentId: Department;
 
-    @Prop({
-        required: true,
-        type: {
-            days: [String],
-            startTime: String,
-            endTime: String,
-        }
-    })
-    shift: Shift;
+  @Prop({
+    required: true,
+    type: {
+      days: [String],
+      startTime: String,
+      endTime: String,
+    },
+  })
+  shift: Shift;
 
   @Prop({ required: true, minlength: 3, maxlength: 30 })
   jobTitle: string;

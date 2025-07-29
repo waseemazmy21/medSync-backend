@@ -14,11 +14,13 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './schemas/User.schema';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { PoliciesGuard } from '../casl/policies.guard';
-import { UserRole } from './schemas/User.schema';
+import { UserRole } from 'src/common/types';
 import { CaslAbilityFactory } from '../casl/casl-ability.factory';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { subject } from '@casl/ability';
 
 @Controller('user')
-@UseGuards(PoliciesGuard)
+// @UseGuards(PoliciesGuard)
 export class UserController {
   constructor(
     private readonly userService: UserService,
@@ -56,11 +58,15 @@ export class UserController {
   //     return { message: 'Not Authorized' };
   //   }
   // }
-
+  @UseGuards(AuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user: User) {
+    console.log(user);
     const ability = this.caslAbilityFactory.defineAbility(user);
     const targetUser = await this.userService.findOne(id);
+    console.log(targetUser);
+    // !! The Subject that's passed to the ability is not of the correct type!
+    // ability.can('read', subject('User',targetUser))
     if (!targetUser || !ability.can('read', targetUser)) {
       return { message: 'Not Authorized' };
     }

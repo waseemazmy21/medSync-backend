@@ -1,7 +1,7 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { User } from "./User.schema";
-import { Document } from "mongoose";
-import { BloodType } from "src/common/types";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { User } from './User.schema';
+import { Document } from 'mongoose';
+import { BloodType } from 'src/common/types';
 
 export type PatientDocument = Patient & Document;
 
@@ -13,11 +13,11 @@ export class Patient extends User {
   @Prop({ required: true })
   birthDate: Date;
 
-    @Prop({ enum: BloodType })
-    bloodType: BloodType;
+  @Prop({ enum: BloodType })
+  bloodType: BloodType;
 
-    @Prop({ default: [] })
-    allergies: string[];
+  @Prop({ default: [] })
+  allergies: string[];
 }
 
 export const PatientSchema = SchemaFactory.createForClass(Patient);

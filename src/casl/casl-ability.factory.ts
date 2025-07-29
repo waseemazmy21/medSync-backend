@@ -3,15 +3,17 @@ import {
   AbilityClass,
   ExtractSubjectType,
   InferSubjects,
+  MatchConditions,
   PureAbility,
 } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
-import { User, UserRole } from 'src/user/schemas/User.schema';
-
+import { User } from 'src/user/schemas/User.schema';
+import { UserRole } from 'src/common/types';
 type Actions = 'manage' | 'create' | 'read' | 'update' | 'delete';
 type Subjects = InferSubjects<typeof User> | 'all';
 
 export type AppAbility = PureAbility<[Actions, Subjects]>;
+const lambdaMatcher = (matchConditions: MatchConditions) => matchConditions;
 
 @Injectable()
 export class CaslAbilityFactory {
@@ -31,6 +33,7 @@ export class CaslAbilityFactory {
     }
 
     return build({
+      conditionsMatcher: lambdaMatcher,
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
     });

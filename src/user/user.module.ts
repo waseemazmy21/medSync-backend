@@ -8,7 +8,7 @@ import { Doctor, DoctorSchema } from './schemas/Doctor.schema';
 import { Nurse, NurseSchema } from './schemas/Nurse.schema';
 import { Staff, StaffSchema } from './schemas/Staff.schema';
 import { CaslAbilityFactory } from 'src/casl/casl-ability.factory';
-
+import { JwtService } from '@nestjs/jwt';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -20,14 +20,14 @@ import { CaslAbilityFactory } from 'src/casl/casl-ability.factory';
           { name: Patient.name, schema: PatientSchema },
           { name: Doctor.name, schema: DoctorSchema },
           { name: Nurse.name, schema: NurseSchema },
-          { name: Staff.name, schema: StaffSchema }
-        ]
+          { name: Staff.name, schema: StaffSchema },
+        ],
       },
     ]),
   ],
 
   controllers: [UserController],
-  providers: [UserService,  CaslAbilityFactory,],
+  providers: [UserService, CaslAbilityFactory, JwtService],
   exports: [MongooseModule],
 })
-export class UserModule { }
+export class UserModule {}
