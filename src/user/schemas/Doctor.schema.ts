@@ -1,7 +1,10 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
 import { User } from "./User.schema";
+import { Shift } from "src/common/types";
+import { Department } from "src/department/schemas/Department.schema";
 
+export type DoctorDocument = Doctor & Document;
 @Schema()
 export class Doctor extends User {
     @Prop({
@@ -9,13 +12,14 @@ export class Doctor extends User {
         ref: 'Department',
         required: true,
     })
-    departmentId: mongoose.Types.ObjectId;
+    departmentId: Department;
 
     @Prop({ type: String, required: true })
     specialization: string;
 
     @Prop({
-        required: true, type: {
+        required: true,
+        type: {
             days: [String],
             startTime: String,
             endTime: String,

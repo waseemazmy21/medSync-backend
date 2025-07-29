@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserSchema } from './schemas/User.schema';
+import { User, UserSchema } from './schemas/User.schema';
 import { Patient, PatientSchema } from './schemas/Patient.schema';
 import { Doctor, DoctorSchema } from './schemas/Doctor.schema';
 import { Nurse, NurseSchema } from './schemas/Nurse.schema';
@@ -16,6 +16,7 @@ import { CaslAbilityFactory } from 'src/casl/casl-ability.factory';
         name: 'User',
         schema: UserSchema,
         discriminators: [
+          { name: User.name, schema: UserSchema },
           { name: Patient.name, schema: PatientSchema },
           { name: Doctor.name, schema: DoctorSchema },
           { name: Nurse.name, schema: NurseSchema },
@@ -27,5 +28,6 @@ import { CaslAbilityFactory } from 'src/casl/casl-ability.factory';
 
   controllers: [UserController],
   providers: [UserService,  CaslAbilityFactory,],
+  exports: [MongooseModule],
 })
 export class UserModule { }
