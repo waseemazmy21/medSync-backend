@@ -17,13 +17,19 @@ import { AuthGuard } from './guards/auth.guard';
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
           expiresIn: configService.get<string>('JWT_EXPIRES_IN'),
-        }
+        },
       }),
       inject: [ConfigService],
-    })
+    }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [
+    AuthService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
   exports: [JwtModule],
 })
-export class AuthModule { }
+export class AuthModule {}

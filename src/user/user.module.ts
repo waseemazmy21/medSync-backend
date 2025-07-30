@@ -7,7 +7,7 @@ import { Patient, PatientSchema } from './schemas/Patient.schema';
 import { Doctor, DoctorSchema } from './schemas/Doctor.schema';
 import { Nurse, NurseSchema } from './schemas/Nurse.schema';
 import { Staff, StaffSchema } from './schemas/Staff.schema';
-
+import { JwtService } from '@nestjs/jwt';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -25,7 +25,7 @@ import { Staff, StaffSchema } from './schemas/Staff.schema';
     ])
   ],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService, JwtService],
   exports: [MongooseModule],
 })
 export class UserModule { }
