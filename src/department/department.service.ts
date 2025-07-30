@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
-import { Department } from './schemas/Department.schema';
+import { Department, DepartmentDocument } from './schemas/Department.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class DepartmentService {
 
-  constructor(@InjectModel(Department.name) private readonly departmentModel: Model<Department>) { }
+  constructor(@InjectModel(Department.name) private readonly departmentModel: Model<DepartmentDocument>) { }
 
   create(createDepartmentDto: CreateDepartmentDto) {
     const created = new this.departmentModel(createDepartmentDto);
@@ -27,7 +27,7 @@ export class DepartmentService {
 
   async update(id: string, updateDepartmentDto: UpdateDepartmentDto) {
     const updated = await this.departmentModel
-      .findByIdAndUpdate(id, updateDepartmentDto, { new: true })
+      .findByIdAndUpdate(id, updateDepartmentDto, { new: true, runValidators: true })
       .exec();
     if (!updated) throw new NotFoundException('Department not found');
     return updated;

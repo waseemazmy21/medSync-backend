@@ -1,14 +1,13 @@
 import {
-    IsNumber,
+    IsNotEmpty,
     IsOptional,
     IsString,
     Length,
-    Max,
-    Min,
 } from 'class-validator';
 
 export class CreateDepartmentDto {
     @IsString()
+    @IsNotEmpty()
     name: string;
 
     @IsString()
@@ -18,15 +17,4 @@ export class CreateDepartmentDto {
     @IsOptional()
     @IsString()
     image?: string;
-
-    @IsOptional()
-    @IsNumber()
-    @Min(0)
-    @Max(5)
-    averageRating?: number;
-
-    @IsOptional()
-    @IsNumber()
-    @Min(0)
-    numberOfReviews?: number;
 }
