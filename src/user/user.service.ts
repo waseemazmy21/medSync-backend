@@ -11,8 +11,10 @@ export class UserService {
     @InjectModel('User') private readonly userModel: Model<User>,
   ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  async create(createUserDto: CreateUserDto) {
+    // Add actual user creation logic
+    const user = new this.userModel(createUserDto);
+    return user.save();
   }
 
   async findAll(filter?: { departmentId?: string }) {
@@ -22,15 +24,63 @@ export class UserService {
     return this.userModel.find();
   }
 
+  async findAllWithAuth(user: any) {
+    if (user.role === 'Admin') {
+      return this.userModel.find();
+    }
+    return { message: 'Not Authorized' };
+  }
+
   async findOne(id: string) {
     return this.userModel.findById(id);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async findOneWithAuth(id: string, user: any) {
+    if (user.role === 'Admin') {
+      return this.userModel.findById(id);
+    }
+    if (user._id && (id === String(user._id))) {
+      return this.userModel.findById(id);
+    }
+    return { message: 'Not Authorized' };
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    return this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true });
+  }
+
+  async updateWithAuth(id: string, updateUserDto: UpdateUserDto, user: any) {
+    const targetUser = await this.userModel.findById(id);
+    if (!targetUser) {
+      return { message: 'User not found' };
+    }
+    if (user.role === 'Admin' || (user._id && (id === String(user._id)))) {
+      return this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true });
+    }
+    return { message: 'Forbidden' };
   }
 
   async remove(id: string) {
     return this.userModel.findByIdAndDelete(id);
+  }
+
+  async removeWithAuth(id: string, user: any) {
+    const targetUser = await this.userModel.findById(id);
+    if (!targetUser) {
+      return { message: 'User not found' };
+    }
+    if (targetUser.role === 'Admin') {
+      return { message: 'Cannot delete an Admin' };
+    }
+    if (user.role === 'Admin') {
+      if (id === String(user._id)) {
+        return { message: 'Admin cannot delete themselves' };
+      }
+      return this.userModel.findByIdAndDelete(id);
+    }
+    if (user._id && (id === String(user._id))) {
+      return this.userModel.findByIdAndDelete(id);
+    }
+    return { message: 'Forbidden' };
   }
 }
