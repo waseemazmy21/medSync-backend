@@ -7,13 +7,13 @@ import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class DepartmentService {
-
   constructor(@InjectModel(Department.name) private readonly departmentModel: Model<DepartmentDocument>) { }
-
+  
   create(createDepartmentDto: CreateDepartmentDto) {
     const created = new this.departmentModel(createDepartmentDto);
     return created.save();
   }
+
 
   findAll() {
     return this.departmentModel.find().exec();
