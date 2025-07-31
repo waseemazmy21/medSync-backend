@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { Department, DepartmentDocument } from './schemas/Department.schema';
@@ -8,12 +8,20 @@ import { InjectModel } from '@nestjs/mongoose';
 @Injectable()
 export class DepartmentService {
   constructor(@InjectModel(Department.name) private readonly departmentModel: Model<DepartmentDocument>) { }
-  
-  create(createDepartmentDto: CreateDepartmentDto) {
-    const created = new this.departmentModel(createDepartmentDto);
-    return created.save();
-  }
 
+  async create(createDepartmentDto: CreateDepartmentDto) {
+    const existingDepartment = await this.departmentModel.findOne({
+      $or: [
+        { name: createDepartmentDto.name },
+        { nameAr: createDepartmentDto.nameAr }
+      ]
+    });
+    if (existingDepartment) {
+      throw new ConflictException('Department with this name already exists');
+    }
+    const department = await this.departmentModel.create(createDepartmentDto);
+    return department;
+  }
 
   findAll() {
     return this.departmentModel.find().exec();

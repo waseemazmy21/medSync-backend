@@ -18,33 +18,68 @@ import { UserRole } from 'src/common/types';
 import { RolesGuard } from 'src/rbac/roles.guard';
 
 @UseGuards(AuthGuard, RolesGuard)
-@Roles(UserRole.Admin, UserRole.DepartmentManager)
+@Roles(UserRole.Admin)
 @Controller('department')
 export class DepartmentController {
-  constructor(private readonly departmentService: DepartmentService) {}
+  constructor(private readonly departmentService: DepartmentService) { }
 
   @Post()
-  create(@Body() createDepartmentDto: CreateDepartmentDto) {
-    return this.departmentService.create(createDepartmentDto);
+  async create(@Body() createDepartmentDto: CreateDepartmentDto) {
+    const department = await this.departmentService.create(createDepartmentDto);
+    return {
+      sucess: true,
+      message: 'Department created successfully',
+      data: {
+        department,
+      }
+    }
   }
 
   @Get()
-  findAll() {
-    return this.departmentService.findAll();
+  async findAll() {
+    const departments = await this.departmentService.findAll();
+    return {
+      sucess: true,
+      message: 'Departments retrieved successfully',
+      data: {
+        departments,
+      }
+    }
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.departmentService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const department = await this.departmentService.findOne(id);
+    return {
+      sucess: true,
+      message: 'Department retrieved successfully',
+      data: {
+        department,
+      }
+    }
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDepartmentDto: UpdateDepartmentDto) {
-    return this.departmentService.update(id, updateDepartmentDto);
+  async update(@Param('id') id: string, @Body() updateDepartmentDto: UpdateDepartmentDto) {
+    const department = this.departmentService.update(id, updateDepartmentDto);
+    return {
+      sucess: true,
+      message: 'Department updated successfully',
+      data: {
+        department,
+      }
+    }
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.departmentService.remove(id);
+  async remove(@Param('id') id: string) {
+    const department = this.departmentService.remove(id);
+    return {
+      sucess: true,
+      message: 'Department deleted successfully',
+      data: {
+        department,
+      }
+    }
   }
 }
