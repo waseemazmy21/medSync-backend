@@ -2,7 +2,9 @@ import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PatientRegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { SkipAuth } from './decorators/skipauth.decorator';
 
+@SkipAuth()
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
