@@ -1,41 +1,41 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
-import { Department } from './schemas/Department.schema';
+import { Department, DepartmentDocument } from './schemas/Department.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class DepartmentService {
-  constructor(
-    @InjectModel(Department.name)
-    private readonly departmentModel: Model<Department>,
-  ) {}
-
+  constructor(@InjectModel(Department.name) private readonly departmentModel: Model<DepartmentDocument>) { }
+  
   create(createDepartmentDto: CreateDepartmentDto) {
-    const dept = new this.departmentModel(createDepartmentDto);
-    dept.save();
-    return {
-      message: 'Department created successfully',
-      data: dept,
-    };
+    const created = new this.departmentModel(createDepartmentDto);
+    return created.save();
   }
 
-  async findAll() {
-    return this.departmentModel.find();
+
+  findAll() {
+    return this.departmentModel.find().exec();
   }
 
-  async findOne(id: number) {
-    return this.departmentModel.findById(id);
+  async findOne(id: string) {
+    const department = await this.departmentModel.findById(id).exec();
+    if (!department) throw new NotFoundException('Department not found');
+    return department;
   }
 
-  async update(id: number, updateDepartmentDto: UpdateDepartmentDto) {
-    return this.departmentModel.findByIdAndUpdate(id, updateDepartmentDto, {
-      new: true,
-    });
+  async update(id: string, updateDepartmentDto: UpdateDepartmentDto) {
+    const updated = await this.departmentModel
+      .findByIdAndUpdate(id, updateDepartmentDto, { new: true, runValidators: true })
+      .exec();
+    if (!updated) throw new NotFoundException('Department not found');
+    return updated;
   }
 
-  async remove(id: number) {
-    return this.departmentModel.findByIdAndDelete(id);
+  async remove(id: string) {
+    const deleted = await this.departmentModel.findByIdAndDelete(id).exec();
+    if (!deleted) throw new NotFoundException('Department not found');
+    return deleted;
   }
 }
