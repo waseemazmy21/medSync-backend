@@ -94,7 +94,7 @@ export class UserController {
     const user = req.user;
     // Admins can update any user
     if (user.role === UserRole.Admin) {
-      return this.userService.update(+id, updateUserDto);
+      return this.userService.update(id, updateUserDto);
     }
     // DepartmentManager can update users in their department
     if (user.role === UserRole.DepartmentManager) {
@@ -110,14 +110,14 @@ export class UserController {
         managerUser.departmentId &&
         String(targetUser.departmentId) === String(managerUser.departmentId)
       ) {
-        return this.userService.update(+id, updateUserDto);
+        return this.userService.update(id, updateUserDto);
       } else {
         return { message: 'Not Authorized' };
       }
     }
     // All users can update their own info
     if (user._id && id === String(user._id)) {
-      return this.userService.update(+id, updateUserDto);
+      return this.userService.update(id, updateUserDto);
     }
     return { message: 'Not Authorized' };
   }

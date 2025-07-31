@@ -7,8 +7,10 @@ import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class DepartmentService {
-
-  constructor(@InjectModel(Department.name) private readonly departmentModel: Model<Department>) { }
+  constructor(
+    @InjectModel(Department.name)
+    private readonly departmentModel: Model<Department>,
+  ) {}
 
   create(createDepartmentDto: CreateDepartmentDto) {
     const dept = new this.departmentModel(createDepartmentDto);
@@ -19,19 +21,21 @@ export class DepartmentService {
     };
   }
 
-  findAll() {
-    return `This action returns all department`;
+  async findAll() {
+    return this.departmentModel.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} department`;
+  async findOne(id: number) {
+    return this.departmentModel.findById(id);
   }
 
-  update(id: number, updateDepartmentDto: UpdateDepartmentDto) {
-    return `This action updates a #${id} department`;
+  async update(id: number, updateDepartmentDto: UpdateDepartmentDto) {
+    return this.departmentModel.findByIdAndUpdate(id, updateDepartmentDto, {
+      new: true,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} department`;
+  async remove(id: number) {
+    return this.departmentModel.findByIdAndDelete(id);
   }
 }
