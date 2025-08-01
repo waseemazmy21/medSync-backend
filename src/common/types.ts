@@ -13,18 +13,10 @@ export enum UserRole {
 }
 
 export type Shift = {
-  days: (
-    | 'saturday'
-    | 'sunday'
-    | 'monday'
-    | 'tuesday'
-    | 'wednesday'
-    | 'thursday'
-    | 'friday'
-  )[];
+  day: (0 | 1 | 2 | 3 | 4 | 5 | 6 | 7)[]; // 0: Saturday, 1: Sunday, ..., 6: Friday
   startTime: string; // "HH:mm"
   endTime: string; // "HH:mm"
-};
+}
 
 export enum BloodType {
   A_POS = 'A+',

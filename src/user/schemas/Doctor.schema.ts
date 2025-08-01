@@ -17,10 +17,13 @@ export class Doctor extends User {
     @Prop({ type: String, required: true })
     specialization: string;
 
+    @Prop({ type: String, required: true })
+    specializationAr: string;
+
     @Prop({
         required: true,
         type: {
-            days: [String],
+            days: [Number],
             startTime: String,
             endTime: String,
         }

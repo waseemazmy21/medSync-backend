@@ -18,7 +18,7 @@ export class Staff extends User {
     @Prop({
         required: true,
         type: {
-            days: [String],
+            days: [Number],
             startTime: String,
             endTime: String,
         }
@@ -27,6 +27,9 @@ export class Staff extends User {
 
     @Prop({ required: true, minlength: 3, maxlength: 30 })
     jobTitle: string;
+
+    @Prop({ required: true, minlength: 3, maxlength: 30 })
+    jobTitleAr: string;
 }
 
 export const StaffSchema = SchemaFactory.createForClass(Staff);
