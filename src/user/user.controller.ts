@@ -14,13 +14,12 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/rbac/roles.guard';
 import { UserRole } from 'src/common/types';
 import { Roles } from 'src/rbac/roles.decorator';
 import { User } from './schemas/User.schema';
 
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(RolesGuard)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}

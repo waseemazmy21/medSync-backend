@@ -14,12 +14,11 @@ import {
 import { AppointmentService } from './appointment.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentByDoctorDto, UpdateAppointmentByPatientDto } from './dto/update-appointment.dto';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/rbac/roles.guard';
 import { Roles } from 'src/rbac/roles.decorator';
 import { UserRole } from 'src/common/types';
 
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(RolesGuard)
 @Controller('appointment')
 export class AppointmentController {
   constructor(private readonly appointmentService: AppointmentService) {}
