@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
 import { DepartmentModule } from './department/department.module';
+import { AppointmentModule } from './appointment/appointment.module';
 import { AuthModule } from './auth/auth.module';
 import { RolesGuard } from './rbac/roles.guard';
 import { APP_GUARD } from '@nestjs/core';
@@ -24,6 +25,7 @@ import { AuthGuard } from './auth/guards/auth.guard';
     }),
     UserModule,
     DepartmentModule,
+    AppointmentModule,
     AuthModule,
   ],
   controllers: [AppController],
