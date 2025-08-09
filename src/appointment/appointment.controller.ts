@@ -13,7 +13,10 @@ import {
 } from '@nestjs/common';
 import { AppointmentService } from './appointment.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
-import { UpdateAppointmentByDoctorDto, UpdateAppointmentByPatientDto } from './dto/update-appointment.dto';
+import {
+  UpdateAppointmentByDoctorDto,
+  UpdateAppointmentByPatientDto,
+} from './dto/update-appointment.dto';
 import { RolesGuard } from 'src/rbac/roles.guard';
 import { Roles } from 'src/rbac/roles.decorator';
 import { UserRole } from 'src/common/types';
@@ -23,22 +26,29 @@ import { UserRole } from 'src/common/types';
 export class AppointmentController {
   constructor(private readonly appointmentService: AppointmentService) {}
 
+  // A patient can book an appointment
   @Roles(UserRole.Patient)
   @Post()
-  async create(@Body() createAppointmentDto: CreateAppointmentDto, @Req() req: any) {
+  async create(
+    @Body() createAppointmentDto: CreateAppointmentDto,
+    @Req() req: any,
+  ) {
     try {
-      const patientId = req.user._id;
-      const appointment = await this.appointmentService.create(createAppointmentDto, patientId);
-      
+      const patientId = req.user.sub;
+      const appointment = await this.appointmentService.create(
+        createAppointmentDto,
+        patientId,
+      );
+
       return {
         success: true,
         message: 'Appointment created successfully',
-        data: { appointment }
+        data: { appointment },
       };
     } catch (error) {
       throw new HttpException(
         'Failed to create appointment',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -57,11 +67,15 @@ export class AppointmentController {
           break;
         case UserRole.Doctor:
           // Doctors can see appointments assigned to them
-          appointments = await this.appointmentService.findByDoctor(currentUser._id);
+          appointments = await this.appointmentService.findByDoctor(
+            currentUser.sub,
+          );
           break;
         case UserRole.Patient:
           // Patients can see their own appointments
-          appointments = await this.appointmentService.findByPatient(currentUser._id);
+          appointments = await this.appointmentService.findByPatient(
+            currentUser.sub,
+          );
           break;
         default:
           throw new HttpException('Unauthorized access', HttpStatus.FORBIDDEN);
@@ -70,7 +84,7 @@ export class AppointmentController {
       return {
         success: true,
         message: 'Appointments retrieved successfully',
-        data: { appointments }
+        data: { appointments },
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -78,7 +92,7 @@ export class AppointmentController {
       }
       throw new HttpException(
         'Failed to retrieve appointments',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -94,14 +108,14 @@ export class AppointmentController {
       if (!this.canAccessAppointment(currentUser, appointment)) {
         throw new HttpException(
           'You do not have permission to access this appointment',
-          HttpStatus.FORBIDDEN
+          HttpStatus.FORBIDDEN,
         );
       }
 
       return {
         success: true,
         message: 'Appointment retrieved successfully',
-        data: { appointment }
+        data: { appointment },
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -109,7 +123,7 @@ export class AppointmentController {
       }
       throw new HttpException(
         'Failed to retrieve appointment',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -118,7 +132,8 @@ export class AppointmentController {
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateDto: UpdateAppointmentByDoctorDto | UpdateAppointmentByPatientDto,
+    @Body()
+    updateDto: UpdateAppointmentByDoctorDto | UpdateAppointmentByPatientDto,
     @Req() req: any,
   ) {
     try {
@@ -129,7 +144,7 @@ export class AppointmentController {
       if (!this.canAccessAppointment(currentUser, appointment)) {
         throw new HttpException(
           'You do not have permission to access this appointment',
-          HttpStatus.FORBIDDEN
+          HttpStatus.FORBIDDEN,
         );
       }
 
@@ -138,42 +153,41 @@ export class AppointmentController {
 
       if (currentUser.role === UserRole.Doctor) {
         // Doctors can update notes, prescription, and followUpDate
-        if (String(appointment.doctor) !== String(currentUser._id)) {
+        if (String(appointment.doctor) !== String(currentUser.sub)) {
           throw new HttpException(
             'You can only update appointments assigned to you',
-            HttpStatus.FORBIDDEN
+            HttpStatus.FORBIDDEN,
           );
         }
-        
+
         const doctorDto = updateDto as UpdateAppointmentByDoctorDto;
         updateData = {
           notes: doctorDto.notes,
           prescription: doctorDto.prescription,
           followUpDate: doctorDto.followUpDate,
         };
-        
-        // Remove undefined values
-        Object.keys(updateData).forEach(key => 
-          updateData[key] === undefined && delete updateData[key]
-        );
 
+        // Remove undefined values
+        Object.keys(updateData).forEach(
+          (key) => updateData[key] === undefined && delete updateData[key],
+        );
       } else if (currentUser.role === UserRole.Patient) {
         // Patients can only update date, with 24-hour rule
-        if (String(appointment.patient) !== String(currentUser._id)) {
+        if (String(appointment.patient) !== String(currentUser.sub)) {
           throw new HttpException(
             'You can only update your own appointments',
-            HttpStatus.FORBIDDEN
+            HttpStatus.FORBIDDEN,
           );
         }
 
         const patientDto = updateDto as UpdateAppointmentByPatientDto;
-        
+
         if (patientDto.date) {
           // Check 24-hour rule
           if (!this.canModifyAppointmentDate(appointment.date)) {
             throw new HttpException(
               'You can only modify appointment date at least 24 hours before the appointment',
-              HttpStatus.FORBIDDEN
+              HttpStatus.FORBIDDEN,
             );
           }
           updateData.date = patientDto.date;
@@ -183,16 +197,19 @@ export class AppointmentController {
       if (Object.keys(updateData).length === 0) {
         throw new HttpException(
           'No valid fields to update',
-          HttpStatus.BAD_REQUEST
+          HttpStatus.BAD_REQUEST,
         );
       }
 
-      const updatedAppointment = await this.appointmentService.update(id, updateData);
-      
+      const updatedAppointment = await this.appointmentService.update(
+        id,
+        updateData,
+      );
+
       return {
         success: true,
         message: 'Appointment updated successfully',
-        data: { appointment: updatedAppointment }
+        data: { appointment: updatedAppointment },
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -200,7 +217,7 @@ export class AppointmentController {
       }
       throw new HttpException(
         'Failed to update appointment',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -213,10 +230,10 @@ export class AppointmentController {
       const currentUser = req.user;
 
       // Only patients can delete appointments, and only their own
-      if (String(appointment.patient) !== String(currentUser._id)) {
+      if (String(appointment.patient) !== String(currentUser.sub)) {
         throw new HttpException(
           'You can only delete your own appointments',
-          HttpStatus.FORBIDDEN
+          HttpStatus.FORBIDDEN,
         );
       }
 
@@ -224,16 +241,16 @@ export class AppointmentController {
       if (!this.canModifyAppointmentDate(appointment.date)) {
         throw new HttpException(
           'You can only delete appointments at least 24 hours before the appointment time',
-          HttpStatus.FORBIDDEN
+          HttpStatus.FORBIDDEN,
         );
       }
 
       const deletedAppointment = await this.appointmentService.remove(id);
-      
+
       return {
         success: true,
         message: 'Appointment deleted successfully',
-        data: { appointment: deletedAppointment }
+        data: { appointment: deletedAppointment },
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -241,7 +258,7 @@ export class AppointmentController {
       }
       throw new HttpException(
         'Failed to delete appointment',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -257,12 +274,12 @@ export class AppointmentController {
 
     // Doctors can access appointments assigned to them
     if (currentUser.role === UserRole.Doctor) {
-      return String(appointment.doctor) === String(currentUser._id);
+      return String(appointment.doctor) === String(currentUser.sub);
     }
 
     // Patients can access their own appointments
     if (currentUser.role === UserRole.Patient) {
-      return String(appointment.patient) === String(currentUser._id);
+      return String(appointment.patient) === String(currentUser.sub);
     }
 
     return false;
@@ -276,7 +293,7 @@ export class AppointmentController {
     const appointmentTime = new Date(appointmentDate);
     const timeDifference = appointmentTime.getTime() - now.getTime();
     const hoursDifference = timeDifference / (1000 * 60 * 60);
-    
+
     return hoursDifference >= 24;
   }
 }
