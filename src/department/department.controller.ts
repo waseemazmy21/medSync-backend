@@ -43,13 +43,13 @@ export class DepartmentController {
     }
   }
 
-  @Roles(UserRole.Admin, UserRole.DepartmentManager)
+  @Roles(UserRole.Admin, UserRole.Doctor)
   @Get()
   async findAll(@Request() req: any) {
     try {
       // Department managers can only see their own department
       let filter = {};
-      if (req.user.role === UserRole.DepartmentManager) {
+      if (req.user.role === UserRole.Doctor) {
         if (!req.user.departmentId) {
           throw new HttpException(
             'Department manager must be assigned to a department',
@@ -78,7 +78,7 @@ export class DepartmentController {
     }
   }
 
-  @Roles(UserRole.Admin, UserRole.DepartmentManager)
+  @Roles(UserRole.Admin, UserRole.Doctor)
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req: any) {
     try {
@@ -89,7 +89,7 @@ export class DepartmentController {
       }
 
       // Department managers can only view their own department
-      if (req.user.role === UserRole.DepartmentManager) {
+      if (req.user.role === UserRole.Doctor) {
         if (!req.user.departmentId || String(req.user.departmentId) !== id) {
           throw new HttpException(
             'You can only view your own department',
