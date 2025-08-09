@@ -153,7 +153,7 @@ export class AppointmentController {
 
       if (currentUser.role === UserRole.Doctor) {
         // Doctors can update notes, prescription, and followUpDate
-        if (String(appointment.doctor) !== String(currentUser.sub)) {
+        if (String(appointment.doctor._id) !== String(currentUser.sub)) {
           throw new HttpException(
             'You can only update appointments assigned to you',
             HttpStatus.FORBIDDEN,
@@ -173,7 +173,7 @@ export class AppointmentController {
         );
       } else if (currentUser.role === UserRole.Patient) {
         // Patients can only update date, with 24-hour rule
-        if (String(appointment.patient) !== String(currentUser.sub)) {
+        if (String(appointment.patient._id) !== String(currentUser.sub)) {
           throw new HttpException(
             'You can only update your own appointments',
             HttpStatus.FORBIDDEN,
@@ -230,7 +230,7 @@ export class AppointmentController {
       const currentUser = req.user;
 
       // Only patients can delete appointments, and only their own
-      if (String(appointment.patient) !== String(currentUser.sub)) {
+      if (String(appointment.patient._id) !== String(currentUser.sub)) {
         throw new HttpException(
           'You can only delete your own appointments',
           HttpStatus.FORBIDDEN,
@@ -274,12 +274,12 @@ export class AppointmentController {
 
     // Doctors can access appointments assigned to them
     if (currentUser.role === UserRole.Doctor) {
-      return String(appointment.doctor) === String(currentUser.sub);
+      return String(appointment.doctor._id) === String(currentUser.sub);
     }
 
     // Patients can access their own appointments
     if (currentUser.role === UserRole.Patient) {
-      return String(appointment.patient) === String(currentUser.sub);
+      return String(appointment.patient._id) === String(currentUser.sub);
     }
 
     return false;
