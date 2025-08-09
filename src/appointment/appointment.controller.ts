@@ -279,7 +279,7 @@ export class AppointmentController {
 
     // Patients can access their own appointments
     if (currentUser.role === UserRole.Patient) {
-      return String(appointment.patient) === String(currentUser.sub);
+      return String(appointment.patient._id) === String(currentUser.sub);
     }
 
     return false;
