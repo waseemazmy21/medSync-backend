@@ -65,9 +65,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    let departmentId = "no-dep";
+    if (user.role === UserRole.Doctor) {
+      // Cast user to any to access departmentId, or use lean() in query for plain object
+      departmentId = (user as any).departmentId;
+    }
+
     const payload = {
       sub: user._id,
       role: user.role,
+      departmentId,
     };
 
     const token = await this.jwtService.signAsync(payload);
