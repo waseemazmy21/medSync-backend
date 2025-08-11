@@ -23,8 +23,8 @@ export class DepartmentService {
     return department;
   }
 
-  findAll() {
-    return this.departmentModel.find().exec();
+  findAll(filter: any = {}) {
+    return this.departmentModel.find(filter).exec();
   }
 
   async findOne(id: string) {
