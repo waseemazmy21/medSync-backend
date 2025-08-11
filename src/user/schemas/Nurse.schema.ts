@@ -18,7 +18,7 @@ export class Nurse extends User {
     @Prop({
         required: true,
         type: {
-            days: [String],
+            days: [Number],
             startTime: String,
             endTime: String,
         }

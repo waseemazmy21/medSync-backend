@@ -29,7 +29,24 @@ Appointment Schema
 }
 - follow up date
 
+### CRUD
 - create (patient)
 - read (patient & doctor & admin)
 - update (doctor -> notes & prescription & follow up date & patient -> date ((24 hours before date)))
 - delete (patient (24 hours before date))
+
+
+### Review
+- patient
+- department
+- appointment
+- doctor
+- rating 0-5
+- feedback: string
+
+CRUD
+- craete (patient)
+- read (patient & department manager)
+- update (patient)
+- delete (patient
+)
