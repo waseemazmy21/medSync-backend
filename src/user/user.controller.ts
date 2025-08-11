@@ -16,7 +16,7 @@ import { RolesGuard } from 'src/rbac/roles.guard';
 import { UserRole } from 'src/common/types';
 import { Roles } from 'src/rbac/roles.decorator';
 import { UseGuards } from '@nestjs/common';
-import { User } from './schemas/User.schema';
+
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('user')
 export class UserController {
@@ -27,7 +27,8 @@ export class UserController {
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
-  @Roles(UserRole.Admin, UserRole.DepartmentManager)
+
+  @Roles(UserRole.Admin)
   @Get()
   findAll(@Req() req) {
     return this.userService.findAll(
@@ -37,13 +38,7 @@ export class UserController {
     );
   }
 
-  @Roles(
-    UserRole.Admin,
-    UserRole.DepartmentManager,
-    UserRole.Doctor,
-    UserRole.Nurse,
-    UserRole.Staff,
-  )
+
   @Get(':id')
   async findOne(@Param('id') id: string, @Req() req: any) {
     const user = req.user;
@@ -77,14 +72,7 @@ export class UserController {
     return { message: 'Not Authorized' };
   }
 
-  @Roles(
-    UserRole.Admin,
-    UserRole.DepartmentManager,
-    UserRole.Doctor,
-    UserRole.Nurse,
-    UserRole.Staff,
-    UserRole.Patient,
-  )
+  
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -122,14 +110,7 @@ export class UserController {
     return { message: 'Not Authorized' };
   }
 
-  @Roles(
-    UserRole.Admin,
-    UserRole.DepartmentManager,
-    UserRole.Doctor,
-    UserRole.Nurse,
-    UserRole.Staff,
-    UserRole.Patient,
-  )
+  
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() req: any) {
     const user = req.user;
