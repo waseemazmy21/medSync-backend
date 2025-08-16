@@ -12,7 +12,7 @@ export class Doctor extends User {
         ref: 'Department',
         required: true,
     })
-    departmentId: Department;
+    department: Department;
 
     @Prop({ type: String, required: true })
     specialization: string;
@@ -31,4 +31,13 @@ export class Doctor extends User {
     shift: Shift;
 }
 
+
+
 export const DoctorSchema = SchemaFactory.createForClass(Doctor);
+
+DoctorSchema.virtual("appointmentCount", {
+    ref: "Appointment",
+    localField: "_id",
+    foreignField: "doctorId",
+    count: true // only returns the count
+});

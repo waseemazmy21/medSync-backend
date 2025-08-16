@@ -13,7 +13,7 @@ export class Staff extends User {
         ref: 'Department',
         required: true,
     })
-    departmentId: Department;
+    department: Department;
 
     @Prop({
         required: true,

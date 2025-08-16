@@ -7,165 +7,112 @@ import {
   Req,
   Param,
   Delete,
-  UseGuards,
-  HttpStatus,
-  HttpException,
+
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { RolesGuard } from 'src/rbac/roles.guard';
 import { UserRole } from 'src/common/types';
 import { Roles } from 'src/rbac/roles.decorator';
+import { CreateDoctorDto } from './dto/create-doctor.dto';
+import { CreateNurseDto } from './dto/create-nurse.dto';
+import { CreateStaffDto } from './dto/create-staff.dto';
+import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { UpdateDoctorDto } from './dto/update-doctor.dto';
+import { UpdateNurseDto } from './dto/update-nurse.dto';
+import { UpdateStaffDto } from './dto/update-staff.dto';
 
-@UseGuards(RolesGuard, UseGuards)
+// @UseGuards(RolesGuard, UseGuards)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
   @Roles(UserRole.Admin)
-  @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    try {
-      return await this.userService.create(createUserDto);
-    } catch (error) {
-      throw new HttpException(
-        'Failed to create user',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+  @Post('doctor')
+  @ApiOperation({ summary: 'Create a doctor (admin only)' })
+  async createDoctor(@Body() dto: CreateDoctorDto) {
+    const user = await this.userService.createDoctor(dto);
+    return {
+      success: true,
+      message: "Doctor created successfully",
+      data: { user }
     }
   }
 
   @Roles(UserRole.Admin)
-  @Get()
-  async findAll(@Req() req: any) {
-    try {
-      // Admins can see all users, department managers only see users in their department
-      const filter = req.user.role === UserRole.DepartmentManager && req.user.departmentId
-        ? { departmentId: req.user.departmentId }
-        : {};
+  @Post('nurse')
+  @ApiOperation({ summary: 'Create a nurse (admin only)' })
+  async createNurse(@Body() dto: CreateNurseDto) {
+    const user = await this.userService.createNurse(dto);
+    return {
+      success: true,
+      message: "Nurse created successfully",
+      data: user,
+    };
+  }
 
-      return await this.userService.findAll(filter);
-    } catch (error) {
-      throw new HttpException(
-        'Failed to retrieve users',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
+  @Roles(UserRole.Admin)
+  @Post('staff')
+  @ApiOperation({ summary: 'Create a staff member (admin only)' })
+  async createStaff(@Body() dto: CreateStaffDto) {
+    const user = await this.userService.createStaff(dto);
+    return {
+      success: true,
+      message: "Staff member created successfully",
+      data: user,
+    };
+  }
+
+
+  @Roles(UserRole.Admin)
+  @Get()
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'department', required: false, type: String, example: '64f1c8a2b9d3e45f7a123456' })
+  @ApiQuery({ name: 'role', required: false, type: String, example: 'Doctor' })
+  @ApiQuery({ name: 'search', required: false, type: String, example: 'waseem' })
+  async findAll(@Req() req: any) {
+    const data = await this.userService.findAll(req.query);
+    return {
+      success: true,
+      message: 'Users fetched successfully',
+      data
+    };
   }
 
 
   @Get(':id')
   async findOne(@Param('id') id: string, @Req() req: any) {
-    try {
-      const currentUser = req.user;
-      const targetUser = await this.userService.findOne(id);
-
-      if (!targetUser) {
-        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-      }
-
-      // Check access permissions
-      if (!this.canAccessUser(currentUser, targetUser, id)) {
-        throw new HttpException(
-          'You do not have permission to access this user',
-          HttpStatus.FORBIDDEN
-        );
-      }
-
-      return targetUser;
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Failed to retrieve user',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
+    const user = this.userService.findOne(id)
+    return {
+      success: true,
+      message: 'User fetched successfully',
+      data: { user }
+    };
   }
 
-
-  @Patch(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
-    @Req() req: any,
-  ) {
-    try {
-      const currentUser = req.user;
-      const targetUser = await this.userService.findOne(id);
-
-      if (!targetUser) {
-        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-      }
-
-      // Check update permissions
-      if (!this.canModifyUser(currentUser, targetUser, id)) {
-        throw new HttpException(
-          'You do not have permission to update this user',
-          HttpStatus.FORBIDDEN
-        );
-      }
-
-      return await this.userService.update(id, updateUserDto);
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Failed to update user',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
+  @Patch('doctor/:id')
+  async updateDoctor(@Param('id') id: string, @Body() updateDoctorDto: UpdateDoctorDto) {
+    return this.userService.updateDoctor(id, updateDoctorDto);
   }
 
+  @Patch('nurse/:id')
+  async updateNurse(@Param('id') id: string, @Body() updateNurseDto: UpdateNurseDto) {
+    return this.userService.updateNurse(id, updateNurseDto);
+  }
 
-  @Roles(UserRole.Admin, UserRole.DepartmentManager)
+  @Patch('staff/:id')
+  async updateStaff(@Param('id') id: string, @Body() updateStaffDto: UpdateStaffDto) {
+    return this.userService.updateStaff(id, updateStaffDto);
+  }
+
+  @Roles(UserRole.Admin)
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() req: any) {
-    try {
-      const currentUser = req.user;
-      const targetUser = await this.userService.findOne(id);
-
-      if (!targetUser) {
-        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-      }
-
-      // Business rule: Cannot delete an Admin
-      if (targetUser.role === UserRole.Admin) {
-        throw new HttpException(
-          'Admin users cannot be deleted',
-          HttpStatus.FORBIDDEN
-        );
-      }
-
-      // Business rule: Admins cannot delete themselves
-      if (currentUser.role === UserRole.Admin && id === String(currentUser._id)) {
-        throw new HttpException(
-          'You cannot delete your own admin account',
-          HttpStatus.FORBIDDEN
-        );
-      }
-
-      // Check deletion permissions
-      if (!this.canDeleteUser(currentUser, targetUser)) {
-        throw new HttpException(
-          'You do not have permission to delete this user',
-          HttpStatus.FORBIDDEN
-        );
-      }
-
-      return await this.userService.remove(id);
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Failed to delete user',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
+    const user = await this.userService.remove(id);
+    return {
+      success: true,
+      message: 'User deleted successfully',
+      data: { user },
+    };
   }
 
   /**
@@ -182,10 +129,6 @@ export class UserController {
       return true;
     }
 
-    // Department managers can access users in their department
-    if (currentUser.role === UserRole.DepartmentManager) {
-      return this.isInSameDepartment(currentUser, targetUser);
-    }
 
     return false;
   }
@@ -204,10 +147,6 @@ export class UserController {
       return true;
     }
 
-    // Department managers can modify users in their department
-    if (currentUser.role === UserRole.DepartmentManager) {
-      return this.isInSameDepartment(currentUser, targetUser);
-    }
 
     return false;
   }
@@ -221,10 +160,7 @@ export class UserController {
       return true;
     }
 
-    // Department managers can delete users in their department
-    if (currentUser.role === UserRole.DepartmentManager) {
-      return this.isInSameDepartment(currentUser, targetUser);
-    }
+
 
     return false;
   }
