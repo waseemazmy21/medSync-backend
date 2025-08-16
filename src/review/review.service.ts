@@ -2,14 +2,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Review } from './schemas/Review.schema';
+import { Review, ReviewDocument } from './schemas/Review.schema';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { UserRole } from 'src/common/types';
 
 @Injectable()
 export class ReviewService {
   constructor(
-    @InjectModel(Review.name) private readonly reviewModel: Model<Review>
+    @InjectModel(Review.name) private readonly reviewModel: Model<ReviewDocument>
   ) { }
 
   async create(createReviewDto: CreateReviewDto) {
@@ -28,15 +29,24 @@ export class ReviewService {
     return review
   }
 
-  async update(id: string, updateReviewDto: UpdateReviewDto) {
-    const updated = await this.reviewModel.findByIdAndUpdate(id, updateReviewDto, { new: true, runValidators: true });
+  async update(id: string, updateReviewDto: UpdateReviewDto, userId: string) {
+    const updated = await this.reviewModel.findOneAndUpdate({ _id: id, patient: userId }, updateReviewDto, { new: true, runValidators: true });
     if (!updated) throw new NotFoundException('Review not found');
     return updated
   }
 
-  async remove(id: string) {
-    const deleted = await this.reviewModel.findByIdAndDelete(id);
+  async remove(id: string, userId: string, role: UserRole) {
+    let deleted;
+
+    if (role === UserRole.Admin) {
+      // Admin can delete any review
+      deleted = await this.reviewModel.findByIdAndDelete(id);
+    } else {
+      // Patient can only delete their own review
+      deleted = await this.reviewModel.findOneAndDelete({ _id: id, patient: userId });
+    }
+
     if (!deleted) throw new NotFoundException('Review not found');
-    return deleted
+    return deleted;
   }
 }
