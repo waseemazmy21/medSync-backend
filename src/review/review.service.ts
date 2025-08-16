@@ -14,55 +14,29 @@ export class ReviewService {
 
   async create(createReviewDto: CreateReviewDto) {
     const created = new this.reviewModel(createReviewDto);
-    await created.save();
-    return {
-      success: true,
-      message: 'Review created successfully',
-      data: { created },
-      errors: null
-    };
+    return created.save();
   }
 
   async findAll() {
-    const reviews = await this.reviewModel.find().exec();
-    return {
-      success: true,
-      message: 'Reviews fetched successfully',
-      data: { reviews },
-      errors: null
-    };
+    const reviews = await this.reviewModel.find();
+    return reviews
   }
 
   async findOne(id: string) {
-    const review = await this.reviewModel.findById(id).exec();
+    const review = await this.reviewModel.findById(id);
     if (!review) throw new NotFoundException('Review not found');
-    return {
-      success: true,
-      message: 'Review fetched successfully',
-      data: { review },
-      errors: null
-    };
+    return review
   }
 
   async update(id: string, updateReviewDto: UpdateReviewDto) {
-    const updated = await this.reviewModel.findByIdAndUpdate(id, updateReviewDto, { new: true, runValidators: true }).exec();
+    const updated = await this.reviewModel.findByIdAndUpdate(id, updateReviewDto, { new: true, runValidators: true });
     if (!updated) throw new NotFoundException('Review not found');
-    return {
-      success: true,
-      message: 'Review updated successfully',
-      data: { updated },
-      errors: null
-    };
+    return updated
   }
 
   async remove(id: string) {
-    const deleted = await this.reviewModel.findByIdAndDelete(id).exec();
+    const deleted = await this.reviewModel.findByIdAndDelete(id);
     if (!deleted) throw new NotFoundException('Review not found');
-    return {
-      success: true,
-      message: 'Review deleted successfully',
-      data: { deleted },
-      errors: null
-    };
+    return deleted
   }
 }

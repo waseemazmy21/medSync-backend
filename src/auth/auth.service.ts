@@ -22,12 +22,17 @@ export class AuthService {
     @InjectModel(Patient.name)
     private readonly patientModel: Model<PatientDocument>,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async register(dto: PatientRegisterDto) {
-    const existingUser = await this.userModel.findOne({ email: dto.email });
+    let existingUser = await this.userModel.findOne({ email: dto.email });
     if (existingUser) {
       throw new ConflictException('Email already exists');
+    }
+
+    existingUser = await this.userModel.findOne({ phone: dto.phone });
+    if (existingUser) {
+      throw new ConflictException('Phone already exists');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);

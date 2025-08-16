@@ -18,7 +18,7 @@ export class Review extends Document {
     @Prop({ type: Number, min: 0, max: 5, required: true })
     rating: number;
 
-    @Prop({ type: String, required: true })
+    @Prop({ type: String, required: true, minlength: 2, maxlength: 500 })
     feedback: string;
 }
 

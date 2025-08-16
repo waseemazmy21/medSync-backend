@@ -11,6 +11,7 @@ import { RolesGuard } from './rbac/roles.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { ReviewModule } from './review/review.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ReviewModule } from './review/review.module';
     AppointmentModule,
     AuthModule,
     ReviewModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [

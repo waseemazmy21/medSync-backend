@@ -5,7 +5,6 @@ export enum Gender {
 
 export enum UserRole {
   Admin = 'Admin',
-  DepartmentManager = 'DepartmentManager',
   Doctor = 'Doctor',
   Nurse = 'Nurse',
   Staff = 'Staff',
@@ -13,7 +12,7 @@ export enum UserRole {
 }
 
 export type Shift = {
-  day: (0 | 1 | 2 | 3 | 4 | 5 | 6 | 7)[]; // 0: Saturday, 1: Sunday, ..., 6: Friday
+  day: (0 | 1 | 2 | 3 | 4 | 5 | 6)[]; // 0: Saturday, 1: Sunday, ..., 6: Friday
   startTime: string; // "HH:mm"
   endTime: string; // "HH:mm"
 }

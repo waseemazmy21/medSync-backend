@@ -10,26 +10,51 @@ export class ReviewController {
 
   @Post()
   async create(@Body() createReviewDto: CreateReviewDto) {
-    return await this.reviewService.create(createReviewDto);
+    const review = await this.reviewService.create(createReviewDto);
+    return {
+      success: true,
+      message: 'Review created successfully',
+      data: { review },
+    };
   }
 
   @Get()
   async findAll() {
-    return await this.reviewService.findAll();
+    const reviews = await this.reviewService.findAll();
+    return {
+      success: true,
+      message: 'Reviews fetched successfully',
+      data: { reviews },
+    };
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return await this.reviewService.findOne(id);
+    const review = await this.reviewService.findOne(id);
+    return {
+      success: true,
+      message: 'Review fetched successfully',
+      data: { review },
+    };
   }
 
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateReviewDto: UpdateReviewDto) {
-    return await this.reviewService.update(id, updateReviewDto);
+    const review = await this.reviewService.update(id, updateReviewDto);
+    return {
+      success: true,
+      message: 'Review updated successfully',
+      data: { review },
+    };
   }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return await this.reviewService.remove(id);
+    const review = await this.reviewService.remove(id);
+    return {
+      success: true,
+      message: 'Review deleted successfully',
+      data: { review },
+    };
   }
 }
