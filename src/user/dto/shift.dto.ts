@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, ArrayNotEmpty, IsInt, Min, Max, Matches } from 'class-validator';
+import { IsArray, ArrayNotEmpty, IsInt, Min, Max, IsString,IsNotEmpty } from 'class-validator';
 
 export class ShiftDto {
     @ApiProperty({
@@ -24,5 +24,8 @@ export class ShiftDto {
         description: 'End time of the shift in HH:mm format',
         example: '17:00',
     })
+    @ApiProperty({ description: 'End time of the shift in HH:mm format' })
+    @IsString()
+    @IsNotEmpty()
     endTime: string;
 }
