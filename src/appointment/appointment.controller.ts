@@ -20,7 +20,10 @@ import {
 import { RolesGuard } from 'src/rbac/roles.guard';
 import { Roles } from 'src/rbac/roles.decorator';
 import { UserRole } from 'src/common/types';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import { Appointment } from './schemas/Appointment.schema';
 
+@ApiTags('Appointment')
 @UseGuards(RolesGuard)
 @Controller('appointment')
 export class AppointmentController {
@@ -29,6 +32,11 @@ export class AppointmentController {
   // A patient can book an appointment
   @Roles(UserRole.Patient)
   @Post()
+  @ApiOperation({ summary: 'Book a new appointment (Patient only)' })
+  @ApiBody({ type: CreateAppointmentDto })
+  @ApiResponse({ status: 201, description: 'Appointment created successfully', schema: { example: { success: true, message: 'Appointment created successfully', data: { appointment: {} } } } })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 500, description: 'Failed to create appointment' })
   async create(
     @Body() createAppointmentDto: CreateAppointmentDto,
     @Req() req: any,
@@ -39,7 +47,6 @@ export class AppointmentController {
         createAppointmentDto,
         patientId,
       );
-
       return {
         success: true,
         message: 'Appointment created successfully',
@@ -55,32 +62,27 @@ export class AppointmentController {
 
   @Roles(UserRole.Admin, UserRole.Doctor, UserRole.Patient)
   @Get()
+  @ApiOperation({ summary: 'Get all appointments (role-based)' })
+  @ApiResponse({ status: 200, description: 'Appointments retrieved successfully', schema: { example: { success: true, message: 'Appointments retrieved successfully', data: { appointments: [] } } } })
+  @ApiResponse({ status: 403, description: 'Unauthorized access' })
+  @ApiResponse({ status: 500, description: 'Failed to retrieve appointments' })
   async findAll(@Req() req: any) {
     try {
       let appointments;
       const currentUser = req.user;
-
       switch (currentUser.role) {
         case UserRole.Admin:
-          // Admins can see all appointments
           appointments = await this.appointmentService.findAll();
           break;
         case UserRole.Doctor:
-          // Doctors can see appointments assigned to them
-          appointments = await this.appointmentService.findByDoctor(
-            currentUser.sub,
-          );
+          appointments = await this.appointmentService.findByDoctor(currentUser.sub);
           break;
         case UserRole.Patient:
-          // Patients can see their own appointments
-          appointments = await this.appointmentService.findByPatient(
-            currentUser.sub,
-          );
+          appointments = await this.appointmentService.findByPatient(currentUser.sub);
           break;
         default:
           throw new HttpException('Unauthorized access', HttpStatus.FORBIDDEN);
       }
-
       return {
         success: true,
         message: 'Appointments retrieved successfully',
@@ -99,19 +101,22 @@ export class AppointmentController {
 
   @Roles(UserRole.Admin, UserRole.Doctor, UserRole.Patient)
   @Get(':id')
+  @ApiOperation({ summary: 'Get appointment by ID (role-based)' })
+  @ApiParam({ name: 'id', description: 'Appointment ID' })
+  @ApiResponse({ status: 200, description: 'Appointment retrieved successfully', schema: { example: { success: true, message: 'Appointment retrieved successfully', data: { appointment: {} } } } })
+  @ApiResponse({ status: 403, description: 'You do not have permission to access this appointment' })
+  @ApiResponse({ status: 404, description: 'Appointment not found' })
+  @ApiResponse({ status: 500, description: 'Failed to retrieve appointment' })
   async findOne(@Param('id') id: string, @Req() req: any) {
     try {
       const appointment = await this.appointmentService.findOne(id);
       const currentUser = req.user;
-
-      // Check access permissions
       if (!this.canAccessAppointment(currentUser, appointment)) {
         throw new HttpException(
           'You do not have permission to access this appointment',
           HttpStatus.FORBIDDEN,
         );
       }
-
       return {
         success: true,
         message: 'Appointment retrieved successfully',
@@ -130,60 +135,53 @@ export class AppointmentController {
 
   @Roles(UserRole.Doctor, UserRole.Patient)
   @Patch(':id')
+  @ApiOperation({ summary: 'Update appointment (Doctor/Patient)' })
+  @ApiParam({ name: 'id', description: 'Appointment ID' })
+  @ApiBody({ schema: { oneOf: [ { $ref: '#/components/schemas/UpdateAppointmentByDoctorDto' }, { $ref: '#/components/schemas/UpdateAppointmentByPatientDto' } ] } })
+  @ApiResponse({ status: 200, description: 'Appointment updated successfully', schema: { example: { success: true, message: 'Appointment updated successfully', data: { appointment: {} } } } })
+  @ApiResponse({ status: 400, description: 'No valid fields to update' })
+  @ApiResponse({ status: 403, description: 'You do not have permission to access this appointment' })
+  @ApiResponse({ status: 500, description: 'Failed to update appointment' })
   async update(
     @Param('id') id: string,
-    @Body()
-    updateDto: UpdateAppointmentByDoctorDto | UpdateAppointmentByPatientDto,
+    @Body() updateDto: UpdateAppointmentByDoctorDto | UpdateAppointmentByPatientDto,
     @Req() req: any,
   ) {
     try {
       const appointment = await this.appointmentService.findOne(id);
       const currentUser = req.user;
-
-      // Check if user can modify this appointment
       if (!this.canAccessAppointment(currentUser, appointment)) {
         throw new HttpException(
           'You do not have permission to access this appointment',
           HttpStatus.FORBIDDEN,
         );
       }
-
-      // Validate and process update based on user role
       let updateData: any = {};
-
       if (currentUser.role === UserRole.Doctor) {
-        // Doctors can update notes, prescription, and followUpDate
         if (String(appointment.doctor._id) !== String(currentUser.sub)) {
           throw new HttpException(
             'You can only update appointments assigned to you',
             HttpStatus.FORBIDDEN,
           );
         }
-
         const doctorDto = updateDto as UpdateAppointmentByDoctorDto;
         updateData = {
           notes: doctorDto.notes,
           prescription: doctorDto.prescription,
           followUpDate: doctorDto.followUpDate,
         };
-
-        // Remove undefined values
         Object.keys(updateData).forEach(
           (key) => updateData[key] === undefined && delete updateData[key],
         );
       } else if (currentUser.role === UserRole.Patient) {
-        // Patients can only update date, with 24-hour rule
         if (String(appointment.patient._id) !== String(currentUser.sub)) {
           throw new HttpException(
             'You can only update your own appointments',
             HttpStatus.FORBIDDEN,
           );
         }
-
         const patientDto = updateDto as UpdateAppointmentByPatientDto;
-
         if (patientDto.date) {
-          // Check 24-hour rule
           if (!this.canModifyAppointmentDate(appointment.date)) {
             throw new HttpException(
               'You can only modify appointment date at least 24 hours before the appointment',
@@ -193,19 +191,16 @@ export class AppointmentController {
           updateData.date = patientDto.date;
         }
       }
-
       if (Object.keys(updateData).length === 0) {
         throw new HttpException(
           'No valid fields to update',
           HttpStatus.BAD_REQUEST,
         );
       }
-
       const updatedAppointment = await this.appointmentService.update(
         id,
         updateData,
       );
-
       return {
         success: true,
         message: 'Appointment updated successfully',
@@ -224,29 +219,28 @@ export class AppointmentController {
 
   @Roles(UserRole.Patient)
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete appointment (Patient only)' })
+  @ApiParam({ name: 'id', description: 'Appointment ID' })
+  @ApiResponse({ status: 200, description: 'Appointment deleted successfully', schema: { example: { success: true, message: 'Appointment deleted successfully', data: { appointment: {} } } } })
+  @ApiResponse({ status: 403, description: 'You can only delete your own appointments' })
+  @ApiResponse({ status: 500, description: 'Failed to delete appointment' })
   async remove(@Param('id') id: string, @Req() req: any) {
     try {
       const appointment = await this.appointmentService.findOne(id);
       const currentUser = req.user;
-
-      // Only patients can delete appointments, and only their own
       if (String(appointment.patient._id) !== String(currentUser.sub)) {
         throw new HttpException(
           'You can only delete your own appointments',
           HttpStatus.FORBIDDEN,
         );
       }
-
-      // Check 24-hour rule
       if (!this.canModifyAppointmentDate(appointment.date)) {
         throw new HttpException(
           'You can only delete appointments at least 24 hours before the appointment time',
           HttpStatus.FORBIDDEN,
         );
       }
-
       const deletedAppointment = await this.appointmentService.remove(id);
-
       return {
         success: true,
         message: 'Appointment deleted successfully',
