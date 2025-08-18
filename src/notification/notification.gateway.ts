@@ -12,8 +12,11 @@ import { Inject, forwardRef } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 
-@WebSocketGateway(80, {
-  namespace: 'notification'
+@WebSocketGateway(undefined, {
+  cors: {
+    origin: '*',
+  },
+  namespace: 'notifications',
 })
 export class NotificationGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
