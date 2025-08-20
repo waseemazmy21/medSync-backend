@@ -1,5 +1,6 @@
 import { IsDateString, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdatePrescriptionDto {
   @IsOptional()
@@ -38,21 +39,41 @@ export class UpdateAppointmentByPatientDto {
 }
 
 export class UpdateAppointmentDto {
+  @ApiProperty({
+    description: 'The updated date of the appointment',
+    example: '2025-09-16T10:00:00.000Z',
+    required: false,
+  })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({}, { message: 'Date must be a valid date string.' })
   date?: string;
 
+  @ApiProperty({
+    description: 'Updated notes for the appointment',
+    example: 'Prescribed antibiotics for the cough.',
+    required: false,
+  })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Notes must be a string.' })
   @MaxLength(500)
   notes?: string;
 
+  @ApiProperty({
+    description: 'Updated prescription for the appointment',
+    type: () => UpdatePrescriptionDto,
+    required: false,
+  })
   @IsOptional()
   @ValidateNested()
   @Type(() => UpdatePrescriptionDto)
   prescription?: UpdatePrescriptionDto;
 
+  @ApiProperty({
+    description: 'Updated follow-up date for the appointment',
+    example: '2025-09-29T10:00:00.000Z',
+    required: false,
+  })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({}, { message: 'Follow-up date must be a valid date string.' })
   followUpDate?: string;
 }
