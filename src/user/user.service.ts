@@ -14,13 +14,16 @@ import { Staff, StaffDocument } from './schemas/Staff.schema';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
 import { UpdateNurseDto } from './dto/update-nurse.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
+import { UpdatePatientDto } from './dto/update-patient.dto';
+import { Patient, PatientDocument } from './schemas/Patient.schema';
 
 @Injectable()
 export class UserService {
   constructor(@InjectModel('User') private readonly userModel: Model<UserDocument>,
     @InjectModel(Doctor.name) private doctorModel: Model<DoctorDocument>,
     @InjectModel(Nurse.name) private nurseModel: Model<NurseDocument>,
-    @InjectModel(Staff.name) private staffModel: Model<StaffDocument>
+    @InjectModel(Staff.name) private staffModel: Model<StaffDocument>,
+    @InjectModel(Patient.name) private patientModel: Model<PatientDocument>
   ) { }
 
   async createDoctor(dto: CreateDoctorDto) {
@@ -147,6 +150,12 @@ export class UserService {
   async updateStaff(id: string, updateStaffDto: UpdateStaffDto) {
     const updated = await this.staffModel.findByIdAndUpdate(id, updateStaffDto, { new: true, runValidators: true });
     if (!updated) throw new NotFoundException('Staff not found');
+    return updated;
+  }
+
+  async updatePatient(id: string, updatePatientDto: UpdatePatientDto) {
+    const updated = await this.patientModel.findByIdAndUpdate(id, updatePatientDto, { new: true, runValidators: true });
+    if (!updated) throw new NotFoundException('Patient not found');
     return updated;
   }
 

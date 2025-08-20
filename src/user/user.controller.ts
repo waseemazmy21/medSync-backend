@@ -19,6 +19,7 @@ import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
 import { UpdateNurseDto } from './dto/update-nurse.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
+import { UpdatePatientDto } from './dto/update-patient.dto';
 
 // @UseGuards(RolesGuard, UseGuards)
 @Controller('user')
@@ -91,17 +92,43 @@ export class UserController {
 
   @Patch('doctor/:id')
   async updateDoctor(@Param('id') id: string, @Body() updateDoctorDto: UpdateDoctorDto) {
-    return this.userService.updateDoctor(id, updateDoctorDto);
+    const user = await this.userService.updateDoctor(id, updateDoctorDto);
+    return {
+      success: true,
+      message: 'Doctor updated successfully',
+      data: { user },
+    };
   }
 
   @Patch('nurse/:id')
   async updateNurse(@Param('id') id: string, @Body() updateNurseDto: UpdateNurseDto) {
-    return this.userService.updateNurse(id, updateNurseDto);
+    const user = await this.userService.updateNurse(id, updateNurseDto);
+    return {
+      success: true,
+      message: 'Nurse updated successfully',
+      data: { user },
+    };
   }
 
   @Patch('staff/:id')
   async updateStaff(@Param('id') id: string, @Body() updateStaffDto: UpdateStaffDto) {
-    return this.userService.updateStaff(id, updateStaffDto);
+    const user = await this.userService.updateStaff(id, updateStaffDto);
+    return {
+      success: true,
+      message: 'Staff memeber updated successfully',
+      data: { user },
+    };
+
+  }
+
+  @Patch('patient/:id')
+  async updatePatient(@Param('id') id: string, @Body() updatePatientDto: UpdatePatientDto) {
+    const user = await this.userService.updatePatient(id, updatePatientDto);
+    return {
+      success: true,
+      message: 'Patient updated successfully',
+      data: { user },
+    };
   }
 
   @Roles(UserRole.Admin)
