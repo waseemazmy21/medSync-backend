@@ -1,7 +1,6 @@
 import {
   ConflictException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -37,10 +36,8 @@ export class AuthService {
       throw new ConflictException('Phone already exists');
     }
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
     const patient = await this.patientModel.create({
       ...dto,
-      password: hashedPassword,
       role: UserRole.Patient,
     });
 
@@ -64,7 +61,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.userModel.findOne({ email: dto.email });
+    const user = await this.userModel.findOne({ email: dto.email }).populate('department');
 
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
