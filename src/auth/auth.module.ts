@@ -6,10 +6,12 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guard';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
     UserModule,
+    NotificationModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -32,4 +34,4 @@ import { AuthGuard } from './guards/auth.guard';
   ],
   exports: [JwtModule],
 })
-export class AuthModule {}
+export class AuthModule { }

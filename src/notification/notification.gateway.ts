@@ -1,8 +1,7 @@
 import {
   WebSocketGateway,
   WebSocketServer,
-  SubscribeMessage,
-  MessageBody,
+
   OnGatewayInit,
   OnGatewayConnection,
   OnGatewayDisconnect
@@ -10,7 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Inject, forwardRef } from '@nestjs/common';
 import { NotificationService } from './notification.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+import { Notification } from './schemas/notification.schema';
 
 @WebSocketGateway(80, {
   namespace: 'notification'
@@ -28,18 +27,19 @@ export class NotificationGateway implements OnGatewayInit, OnGatewayConnection, 
   }
 
   handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
+    const userId = client.handshake.query.userId;
+    if (userId) {
+      client.join(userId);
+      console.log(`Client ${client.id} joined room ${userId}`);
+    }
   }
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  @SubscribeMessage('notification')
-  async handleCreateNotification(@MessageBody() dto: CreateNotificationDto) {
-    const newNotification = await this.notificationService.create(dto);
-
-    this.server.emit('notificationCreated', newNotification);
-    return newNotification;
+  sendToUser(userId: string, notification: Notification) {
+    this.server.to(userId).emit('notification', notification);
   }
+
 }

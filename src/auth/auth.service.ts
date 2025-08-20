@@ -13,6 +13,7 @@ import { Patient, PatientDocument } from 'src/user/schemas/Patient.schema';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { UserRole } from 'src/common/types';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
     @InjectModel(Patient.name)
     private readonly patientModel: Model<PatientDocument>,
     private readonly jwtService: JwtService,
+    private readonly notifcationService: NotificationService
   ) { }
 
   async register(dto: PatientRegisterDto) {
@@ -48,6 +50,9 @@ export class AuthService {
     };
 
     const token = await this.jwtService.signAsync(payload);
+
+    // send welcome notifcation
+    this.notifcationService.sendWelcomeNotification(patient._id as string)
 
     return {
       message: 'Patient registered successfully',
