@@ -43,38 +43,15 @@ export class DepartmentController {
     }
   }
 
-  @Roles(UserRole.Admin, UserRole.Doctor)
   @Get()
   async findAll(@Request() req: any) {
-    try {
-      // Department managers can only see their own department
-      let filter = {};
-      if (req.user.role === UserRole.Doctor) {
-        if (!req.user.departmentId) {
-          throw new HttpException(
-            'Department manager must be assigned to a department',
-            HttpStatus.FORBIDDEN
-          );
-        }
-        filter = { _id: req.user.departmentId };
+    const departments = await this.departmentService.findAll();
+    return {
+      success: true,
+      message: 'Departments retrieved successfully',
+      data: {
+        departments,
       }
-      
-      const departments = await this.departmentService.findAll(filter);
-      return {
-        success: true,
-        message: 'Departments retrieved successfully',
-        data: {
-          departments,
-        }
-      }
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Failed to retrieve departments',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
     }
   }
 
@@ -83,7 +60,7 @@ export class DepartmentController {
   async findOne(@Param('id') id: string, @Request() req: any) {
     try {
       const department = await this.departmentService.findOne(id);
-      
+
       if (!department) {
         throw new HttpException('Department not found', HttpStatus.NOT_FOUND);
       }
@@ -121,7 +98,7 @@ export class DepartmentController {
   async update(@Param('id') id: string, @Body() updateDepartmentDto: UpdateDepartmentDto) {
     try {
       const department = await this.departmentService.findOne(id);
-      
+
       if (!department) {
         throw new HttpException('Department not found', HttpStatus.NOT_FOUND);
       }
@@ -150,7 +127,7 @@ export class DepartmentController {
   async remove(@Param('id') id: string) {
     try {
       const department = await this.departmentService.findOne(id);
-      
+
       if (!department) {
         throw new HttpException('Department not found', HttpStatus.NOT_FOUND);
       }
