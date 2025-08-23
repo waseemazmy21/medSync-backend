@@ -12,6 +12,7 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { AppointmentService } from './appointment.service';
+import { Query } from '@nestjs/common';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import {
   UpdateAppointmentByDoctorDto,
@@ -20,7 +21,7 @@ import {
 import { RolesGuard } from 'src/rbac/roles.guard';
 import { Roles } from 'src/rbac/roles.decorator';
 import { UserRole } from 'src/common/types';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { Appointment } from './schemas/Appointment.schema';
 
 @ApiTags('Appointment')
@@ -66,19 +67,32 @@ export class AppointmentController {
   @ApiResponse({ status: 200, description: 'Appointments retrieved successfully', schema: { example: { success: true, message: 'Appointments retrieved successfully', data: { appointments: [] } } } })
   @ApiResponse({ status: 403, description: 'Unauthorized access' })
   @ApiResponse({ status: 500, description: 'Failed to retrieve appointments' })
-  async findAll(@Req() req: any) {
+  @ApiOperation({ summary: 'Get all appointments (role-based, paginated)' })
+  @ApiResponse({ status: 200, description: 'Appointments retrieved successfully', schema: { example: { success: true, message: 'Appointments retrieved successfully', data: { appointments: [], total: 0, page: 1, limit: 10 } } } })
+  @ApiResponse({ status: 403, description: 'Unauthorized access' })
+  @ApiResponse({ status: 500, description: 'Failed to retrieve appointments' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number', example: 1 })
+  @ApiQuery({ name: 'limit', required: false, description: 'Number of items per page', example: 10 })
+  async findAll(
+    @Req() req: any,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
     try {
       let appointments;
       const currentUser = req.user;
+      const pageNum = parseInt(page, 10) > 0 ? parseInt(page, 10) : 1;
+      const limitNum = parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 10;
+      let result;
       switch (currentUser.role) {
         case UserRole.Admin:
-          appointments = await this.appointmentService.findAll();
+          result = await this.appointmentService.findAll({}, pageNum, limitNum);
           break;
         case UserRole.Doctor:
-          appointments = await this.appointmentService.findByDoctor(currentUser.sub);
+          result = await this.appointmentService.findByDoctor(currentUser.sub, pageNum, limitNum);
           break;
         case UserRole.Patient:
-          appointments = await this.appointmentService.findByPatient(currentUser.sub);
+          result = await this.appointmentService.findByPatient(currentUser.sub, pageNum, limitNum);
           break;
         default:
           throw new HttpException('Unauthorized access', HttpStatus.FORBIDDEN);
@@ -86,7 +100,12 @@ export class AppointmentController {
       return {
         success: true,
         message: 'Appointments retrieved successfully',
-        data: { appointments },
+        data: {
+          appointments: result.data,
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+        },
       };
     } catch (error) {
       if (error instanceof HttpException) {
