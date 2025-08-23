@@ -21,12 +21,26 @@ import { IsDateString, IsOptional, IsString, MaxLength, MinLength, ValidateNeste
 import { Type } from 'class-transformer';
 
 export class UpdatePrescriptionDto {
+  @ApiProperty({
+    description: 'The name of the prescribed medicine',
+    example: 'Panadol',
+    required: false,
+    minLength: 2,
+    maxLength: 100,
+  })
   @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(100)
   medicine?: string;
 
+  @ApiProperty({
+    description: 'The dosage of the medicine',
+    example: '500mg',
+    required: false,
+    minLength: 2,
+    maxLength: 50,
+  })
   @IsOptional()
   @IsString()
   @MinLength(2)
