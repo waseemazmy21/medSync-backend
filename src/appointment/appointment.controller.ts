@@ -63,36 +63,43 @@ export class AppointmentController {
 
   @Roles(UserRole.Admin, UserRole.Doctor, UserRole.Patient)
   @Get()
-  @ApiOperation({ summary: 'Get all appointments (role-based)' })
-  @ApiResponse({ status: 200, description: 'Appointments retrieved successfully', schema: { example: { success: true, message: 'Appointments retrieved successfully', data: { appointments: [] } } } })
-  @ApiResponse({ status: 403, description: 'Unauthorized access' })
-  @ApiResponse({ status: 500, description: 'Failed to retrieve appointments' })
   @ApiOperation({ summary: 'Get all appointments (role-based, paginated)' })
   @ApiResponse({ status: 200, description: 'Appointments retrieved successfully', schema: { example: { success: true, message: 'Appointments retrieved successfully', data: { appointments: [], total: 0, page: 1, limit: 10 } } } })
   @ApiResponse({ status: 403, description: 'Unauthorized access' })
   @ApiResponse({ status: 500, description: 'Failed to retrieve appointments' })
   @ApiQuery({ name: 'page', required: false, description: 'Page number', example: 1 })
   @ApiQuery({ name: 'limit', required: false, description: 'Number of items per page', example: 10 })
+  @ApiQuery({ name: 'date', required: false, description: 'Filter by appointment date (YYYY-MM-DD)', example: '2025-09-01' })
   async findAll(
     @Req() req: any,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('date') date?: string,
   ) {
     try {
-      let appointments;
       const currentUser = req.user;
       const pageNum = parseInt(page, 10) > 0 ? parseInt(page, 10) : 1;
       const limitNum = parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 10;
+      let filter: any = {};
+      if (date) {
+        // Filter for the whole day (00:00:00 to 23:59:59)
+        const start = new Date(date);
+        const end = new Date(date);
+        end.setHours(23, 59, 59, 999);
+        filter.date = { $gte: start, $lte: end };
+      }
       let result;
       switch (currentUser.role) {
         case UserRole.Admin:
-          result = await this.appointmentService.findAll({}, pageNum, limitNum);
+          result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         case UserRole.Doctor:
-          result = await this.appointmentService.findByDoctor(currentUser.sub, pageNum, limitNum);
+          filter.doctor = currentUser.sub;
+          result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         case UserRole.Patient:
-          result = await this.appointmentService.findByPatient(currentUser.sub, pageNum, limitNum);
+          filter.patient = currentUser.sub;
+          result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         default:
           throw new HttpException('Unauthorized access', HttpStatus.FORBIDDEN);
@@ -108,16 +115,12 @@ export class AppointmentController {
         },
       };
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
       throw new HttpException(
         'Failed to retrieve appointments',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
-
   @Roles(UserRole.Admin, UserRole.Doctor, UserRole.Patient)
   @Get(':id')
   @ApiOperation({ summary: 'Get appointment by ID (role-based)' })

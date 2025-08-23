@@ -107,16 +107,4 @@ export class AppointmentService {
 
     return deletedAppointment;
   }
-
-  async findByPatient(patientId: string, page = 1, limit = 10) {
-    return this.findAll({ patient: new Types.ObjectId(patientId) }, page, limit);
-  }
-
-  async findByDoctor(doctorId: string, page = 1, limit = 10) {
-    return this.findAll({ doctor: new Types.ObjectId(doctorId) }, page, limit);
-  }
-
-  async findByDepartment(departmentId: string, page = 1, limit = 10) {
-    return this.findAll({ department: new Types.ObjectId(departmentId) }, page, limit);
-  }
 }
