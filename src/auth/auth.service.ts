@@ -94,4 +94,8 @@ export class AuthService {
       },
     };
   }
+
+  getMe(userId: string) {
+    return this.userModel.findById(userId).populate('department');
+  }
 }
