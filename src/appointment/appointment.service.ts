@@ -15,7 +15,6 @@ export class AppointmentService {
     const appointmentData = {
       ...createAppointmentDto,
       patient: new Types.ObjectId(patientId),
-      doctor: new Types.ObjectId(createAppointmentDto.doctor),
       department: new Types.ObjectId(createAppointmentDto.department),
       date: new Date(createAppointmentDto.date),
       followUpDate: createAppointmentDto.followUpDate ? new Date(createAppointmentDto.followUpDate) : undefined,
