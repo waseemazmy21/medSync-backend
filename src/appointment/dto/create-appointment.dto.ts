@@ -31,13 +31,7 @@ export class CreateAppointmentDto {
   @IsNotEmpty({ message: 'Date is required.' })
   date: string;
 
-  @ApiProperty({
-    description: 'The ID of the doctor for the appointment',
-    example: '60d5ecb8b4850b3e8c8e8e8e',
-  })
-  @IsMongoId({ message: 'Doctor must be a valid Mongo ID.' })
-  @IsNotEmpty({ message: 'Doctor is required.' })
-  doctor: string;
+  // ...doctor property removed...
 
   @ApiProperty({
     description: 'The ID of the department for the appointment',

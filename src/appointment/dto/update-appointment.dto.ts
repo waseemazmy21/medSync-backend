@@ -1,14 +1,46 @@
+import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+// Add OpenAPI schemas for frontend codegen
+export const UpdateAppointmentByDoctorDtoOpenAPISchema = {
+  type: 'object',
+  properties: {
+    status: { type: 'string', enum: ['confirmed', 'completed', 'cancelled'] },
+    notes: { type: 'string' },
+    prescription: { $ref: '#/components/schemas/CreatePrescriptionDto' },
+    followUpDate: { type: 'string' },
+  },
+};
+
+export const UpdateAppointmentByPatientDtoOpenAPISchema = {
+  type: 'object',
+  properties: {
+    date: { type: 'string' },
+    notes: { type: 'string' },
+  },
+};
 import { IsDateString, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdatePrescriptionDto {
+  @ApiProperty({
+    description: 'The name of the prescribed medicine',
+    example: 'Panadol',
+    required: false,
+    minLength: 2,
+    maxLength: 100,
+  })
   @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(100)
   medicine?: string;
 
+  @ApiProperty({
+    description: 'The dosage of the medicine',
+    example: '500mg',
+    required: false,
+    minLength: 2,
+    maxLength: 50,
+  })
   @IsOptional()
   @IsString()
   @MinLength(2)
@@ -17,25 +49,63 @@ export class UpdatePrescriptionDto {
 }
 
 export class UpdateAppointmentByDoctorDto {
+  @ApiProperty({
+    description: 'Status of the appointment',
+    enum: ['confirmed', 'completed', 'cancelled'],
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiProperty({
+    description: 'Doctor notes for the appointment',
+    maxLength: 500,
+    required: false,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   notes?: string;
 
+  @ApiProperty({
+    description: 'Prescription details',
+    type: () => UpdatePrescriptionDto,
+    required: false,
+  })
   @IsOptional()
   @ValidateNested()
   @Type(() => UpdatePrescriptionDto)
   prescription?: UpdatePrescriptionDto;
 
+  @ApiProperty({
+    description: 'Follow-up date for the appointment',
+    example: '2025-09-29T10:00:00.000Z',
+    required: false,
+  })
   @IsOptional()
   @IsDateString()
   followUpDate?: string;
 }
 
 export class UpdateAppointmentByPatientDto {
+  @ApiProperty({
+    description: 'The new date for the appointment',
+    example: '2025-09-16T10:00:00.000Z',
+    required: false,
+  })
   @IsOptional()
   @IsDateString()
   date?: string;
+
+  @ApiProperty({
+    description: 'Notes for the appointment',
+    example: 'Patient requested to reschedule.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
 
 export class UpdateAppointmentDto {

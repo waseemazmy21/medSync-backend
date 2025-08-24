@@ -15,7 +15,6 @@ export class AppointmentService {
     const appointmentData = {
       ...createAppointmentDto,
       patient: new Types.ObjectId(patientId),
-      doctor: new Types.ObjectId(createAppointmentDto.doctor),
       department: new Types.ObjectId(createAppointmentDto.department),
       date: new Date(createAppointmentDto.date),
       followUpDate: createAppointmentDto.followUpDate ? new Date(createAppointmentDto.followUpDate) : undefined,
@@ -25,14 +24,21 @@ export class AppointmentService {
     return createdAppointment.save();
   }
 
-  async findAll(filter: any = {}): Promise<Appointment[]> {
-    return this.appointmentModel
-      .find(filter)
-      .populate('patient', 'name email phone')
-      .populate('doctor', 'name email phone')
-      .populate('department', 'name nameAr')
-      .sort({ date: 1 })
-      .exec();
+  async findAll(filter: any = {}, page = 1, limit = 10): Promise<{ data: Appointment[]; total: number; page: number; limit: number }> {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.appointmentModel
+        .find(filter)
+        .populate('patient', 'name email phone')
+        .populate('doctor', 'name email phone')
+        .populate('department', 'name nameAr')
+        .sort({ date: 1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.appointmentModel.countDocuments(filter),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: string): Promise<Appointment> {
@@ -100,17 +106,5 @@ export class AppointmentService {
     }
 
     return deletedAppointment;
-  }
-
-  async findByPatient(patientId: string): Promise<Appointment[]> {
-    return this.findAll({ patient: new Types.ObjectId(patientId) });
-  }
-
-  async findByDoctor(doctorId: string): Promise<Appointment[]> {
-    return this.findAll({ doctor: new Types.ObjectId(doctorId) });
-  }
-
-  async findByDepartment(departmentId: string): Promise<Appointment[]> {
-    return this.findAll({ department: new Types.ObjectId(departmentId) });
   }
 }
