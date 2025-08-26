@@ -20,6 +20,9 @@ export class Doctor extends User {
     @Prop({ type: String, required: true })
     specializationAr: string;
 
+    @Prop({ default: false })
+    departmentManager: boolean;
+
     @Prop({
         required: true,
         type: {

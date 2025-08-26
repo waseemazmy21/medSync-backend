@@ -24,7 +24,10 @@ export class DepartmentService {
   }
 
   findAll(filter: any = {}) {
-    return this.departmentModel.find(filter).exec();
+    return this.departmentModel.find(filter)
+      .populate('staffCount')
+      .populate('reviews')
+      .exec();
   }
 
   async findOne(id: string) {
