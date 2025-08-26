@@ -27,6 +27,7 @@ export class DepartmentService {
     return this.departmentModel.find(filter)
       .populate('staffCount')
       .populate('reviews')
+      .populate('doctors')
       .exec();
   }
 

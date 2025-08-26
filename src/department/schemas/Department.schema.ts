@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { UserRole } from 'src/common/types';
+import { Doctor } from 'src/user/schemas/Doctor.schema';
 
 export type DepartmentDocument = Department & Document;
 
@@ -55,3 +57,23 @@ DepartmentSchema.virtual('averageRating').get(function () {
     return sum / reviews.length;
 });
 
+
+DepartmentSchema.virtual('doctors', {
+    ref: 'User',
+    localField: '_id',
+    foreignField: 'department',
+    match: { role: UserRole.Doctor }
+})
+
+DepartmentSchema.virtual('availableDays')
+    .get(function () {
+        const doctors: Doctor[] = this.get('doctors');
+        if (!doctors) return [];
+
+        const days = new Set<number>();
+        for (const doctor of doctors) {
+            doctor.shift.days.forEach(day => days.add(day));
+            if (days.size === 7) break; // All days covered
+        }
+        return Array.from(days).sort();
+    });

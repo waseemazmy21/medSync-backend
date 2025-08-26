@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsMongoId, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Types } from 'mongoose';
 
 export class CreatePrescriptionDto {
   @ApiProperty({
@@ -27,18 +26,16 @@ export class CreateAppointmentDto {
     description: 'The date of the appointment',
     example: '2025-09-15T14:30:00.000Z',
   })
-  @IsDateString({}, { message: 'Date must be a valid date string.' })
   @IsNotEmpty({ message: 'Date is required.' })
+  @IsDateString({}, { message: 'Date must be a valid date string.' })
   date: string;
-
-  // ...doctor property removed...
 
   @ApiProperty({
     description: 'The ID of the department for the appointment',
     example: '60d5ecb8b4850b3e8c8e8e8f',
   })
-  @IsMongoId({ message: 'Department must be a valid Mongo ID.' })
   @IsNotEmpty({ message: 'Department is required.' })
+  @IsMongoId({ message: 'Department must be a valid Mongo ID.' })
   department: string;
 
   @ApiProperty({
