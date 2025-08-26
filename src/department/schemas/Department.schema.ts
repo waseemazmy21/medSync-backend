@@ -17,6 +17,9 @@ export class Department {
     @Prop({ required: true, minlength: 10, maxlength: 255 })
     descriptionAr: string;
 
+    @Prop({ required: true })
+    appointmentFee: number;
+
     @Prop()
     image: string;
 

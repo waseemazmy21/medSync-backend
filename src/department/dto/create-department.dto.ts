@@ -1,8 +1,10 @@
 import {
     IsNotEmpty,
+    IsNumber,
     IsOptional,
     IsString,
     Length,
+    Min,
 } from 'class-validator';
 
 export class CreateDepartmentDto {
@@ -29,4 +31,10 @@ export class CreateDepartmentDto {
     @IsOptional()
     @IsString()
     image?: string;
+
+
+    @IsNotEmpty({ message: 'Appointment fee is required' })
+    @IsNumber({ allowNaN: false }, { message: 'Appointment fee must be a number' })
+    @Min(0, { message: 'Consultation fee cannot be negative' })
+    appointmentFee: number;
 }
