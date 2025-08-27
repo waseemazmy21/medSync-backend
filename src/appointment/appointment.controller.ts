@@ -23,12 +23,13 @@ import { Roles } from 'src/rbac/roles.decorator';
 import { UserRole } from 'src/common/types';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { Appointment } from './schemas/Appointment.schema';
+import { Types } from 'mongoose';
 
 @ApiTags('Appointment')
 @UseGuards(RolesGuard)
 @Controller('appointment')
 export class AppointmentController {
-  constructor(private readonly appointmentService: AppointmentService) {}
+  constructor(private readonly appointmentService: AppointmentService) { }
 
   // A patient can book an appointment
   @Roles(UserRole.Patient)
@@ -89,16 +90,17 @@ export class AppointmentController {
         filter.date = { $gte: start, $lte: end };
       }
       let result;
+      const userId = currentUser.sub as string;
       switch (currentUser.role) {
         case UserRole.Admin:
           result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         case UserRole.Doctor:
-          filter.doctor = currentUser.sub;
+          filter.doctor = new Types.ObjectId(userId);
           result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         case UserRole.Patient:
-          filter.patient = currentUser.sub;
+          filter.patient = new Types.ObjectId(userId);
           result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         default:
@@ -159,7 +161,7 @@ export class AppointmentController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update appointment (Doctor/Patient)' })
   @ApiParam({ name: 'id', description: 'Appointment ID' })
-  @ApiBody({ schema: { oneOf: [ { $ref: '#/components/schemas/UpdateAppointmentByDoctorDto' }, { $ref: '#/components/schemas/UpdateAppointmentByPatientDto' } ] } })
+  @ApiBody({ schema: { oneOf: [{ $ref: '#/components/schemas/UpdateAppointmentByDoctorDto' }, { $ref: '#/components/schemas/UpdateAppointmentByPatientDto' }] } })
   @ApiResponse({ status: 200, description: 'Appointment updated successfully', schema: { example: { success: true, message: 'Appointment updated successfully', data: { appointment: {} } } } })
   @ApiResponse({ status: 400, description: 'No valid fields to update' })
   @ApiResponse({ status: 403, description: 'You do not have permission to access this appointment' })

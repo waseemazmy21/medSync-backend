@@ -4,20 +4,23 @@ import { Model, Types } from 'mongoose';
 import { Appointment, AppointmentDocument } from './schemas/Appointment.schema';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { DepartmentService } from 'src/department/department.service';
 
 @Injectable()
 export class AppointmentService {
   constructor(
     @InjectModel(Appointment.name) private appointmentModel: Model<AppointmentDocument>,
-  ) {}
+    private readonly departmentService: DepartmentService,
+  ) { }
 
   async create(createAppointmentDto: CreateAppointmentDto, patientId: string): Promise<Appointment> {
+    const doctorId = await this.departmentService.pickDoctor(createAppointmentDto.department)
     const appointmentData = {
       ...createAppointmentDto,
       patient: new Types.ObjectId(patientId),
+      doctor: new Types.ObjectId(doctorId),
       department: new Types.ObjectId(createAppointmentDto.department),
       date: new Date(createAppointmentDto.date),
-      followUpDate: createAppointmentDto.followUpDate ? new Date(createAppointmentDto.followUpDate) : undefined,
     };
 
     const createdAppointment = new this.appointmentModel(appointmentData);
@@ -66,11 +69,11 @@ export class AppointmentService {
     }
 
     const updateData: any = { ...updateAppointmentDto };
-    
+
     if (updateAppointmentDto.date) {
       updateData.date = new Date(updateAppointmentDto.date);
     }
-    
+
     if (updateAppointmentDto.followUpDate) {
       updateData.followUpDate = new Date(updateAppointmentDto.followUpDate);
     }

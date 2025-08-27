@@ -50,4 +50,25 @@ export class DepartmentService {
     if (!deleted) throw new NotFoundException('Department not found');
     return deleted;
   }
+
+  // department.service.ts
+  async pickDoctor(departmentId: string): Promise<string> {
+    const department = await this.departmentModel
+      .findById(departmentId)
+      .populate('doctors')
+
+    if (!department || department.get('doctors').length === 0) {
+      throw new NotFoundException('No doctors available in this department');
+    }
+
+    const doctors = department.get('doctors');
+    doctors.sort((a, b) => a.appointmentCount - b.appointmentCount);
+
+    const selectedDoctor = doctors[0];
+
+    await selectedDoctor.incrementAppointments();
+
+    return selectedDoctor._id.toString();
+  }
+
 }

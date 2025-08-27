@@ -32,15 +32,15 @@ export class Doctor extends User {
         }
     })
     shift: Shift;
+
+    @Prop({ default: 0 })
+    appointmentCount: number;
 }
 
 
 
 export const DoctorSchema = SchemaFactory.createForClass(Doctor);
-
-DoctorSchema.virtual("appointmentCount", {
-    ref: "Appointment",
-    localField: "_id",
-    foreignField: "doctorId",
-    count: true // only returns the count
-});
+DoctorSchema.methods.incrementAppointments = async function () {
+    this.appointmentCount += 1;
+    await this.save();
+};
