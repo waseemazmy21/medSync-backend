@@ -18,9 +18,41 @@ export class ReviewService {
     return created.save();
   }
 
-  async findAll() {
-    const reviews = await this.reviewModel.find();
-    return reviews
+
+
+  async findByDoctorWithPeriod(doctorId: string, from?: string, to?: string) {
+    const query: any = { doctor: doctorId };
+    if (from || to) {
+      query.createdAt = {};
+      if (from) query.createdAt.$gte = new Date(from);
+      if (to) query.createdAt.$lte = new Date(to);
+    }
+    return this.reviewModel.find(query);
+  }
+
+
+
+  async findByDepartmentWithPeriod(departmentId: string, from?: string, to?: string) {
+    const query: any = { department: departmentId };
+    if (from || to) {
+      query.createdAt = {};
+      if (from) query.createdAt.$gte = new Date(from);
+      if (to) query.createdAt.$lte = new Date(to);
+    }
+    return this.reviewModel.find(query);
+  }
+
+  async findAllWithPeriod(from?: string, to?: string) {
+    const query: any = {};
+    if (from || to) {
+      query.createdAt = {};
+      if (from) query.createdAt.$gte = new Date(from);
+      if (to) query.createdAt.$lte = new Date(to);
+    }
+    else {
+      return await this.reviewModel.find();
+    }
+    return await this.reviewModel.find(query);
   }
 
   async findOne(id: string) {
