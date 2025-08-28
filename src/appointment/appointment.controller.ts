@@ -24,12 +24,16 @@ import { UserRole } from 'src/common/types';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { Appointment } from './schemas/Appointment.schema';
 import { Types } from 'mongoose';
+import { NotificationService } from '../notification/notification.service';
 
 @ApiTags('Appointment')
 @UseGuards(RolesGuard)
 @Controller('appointment')
 export class AppointmentController {
-  constructor(private readonly appointmentService: AppointmentService) { }
+  constructor(
+    private readonly appointmentService: AppointmentService,
+    private readonly notificationService: NotificationService,
+  ) { }
 
   // A patient can book an appointment
   @Roles(UserRole.Patient)
@@ -49,6 +53,14 @@ export class AppointmentController {
         createAppointmentDto,
         patientId,
       );
+      // Notify doctor if assigned
+      if (appointment.doctor) {
+        await this.notificationService.create({
+          recipient: appointment.doctor.toString(),
+          title: 'New Appointment Assigned',
+          message: `You have been assigned a new appointment with patient.`
+        });
+      }
       return {
         success: true,
         message: 'Appointment created successfully',
@@ -71,11 +83,13 @@ export class AppointmentController {
   @ApiQuery({ name: 'page', required: false, description: 'Page number', example: 1 })
   @ApiQuery({ name: 'limit', required: false, description: 'Number of items per page', example: 10 })
   @ApiQuery({ name: 'date', required: false, description: 'Filter by appointment date (YYYY-MM-DD)', example: '2025-09-01' })
+  @ApiQuery({ name: 'when', required: false, description: "Filter by 'before' or 'after' the date", example: 'before' })
   async findAll(
     @Req() req: any,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('date') date?: string,
+    @Query('when') when?: 'before' | 'after',
   ) {
     try {
       const currentUser = req.user;
@@ -83,11 +97,19 @@ export class AppointmentController {
       const limitNum = parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 10;
       let filter: any = {};
       if (date) {
-        // Filter for the whole day (00:00:00 to 23:59:59)
         const start = new Date(date);
+        if (isNaN(start.getTime())) {
+          throw new HttpException('Invalid date format', HttpStatus.BAD_REQUEST);
+        }
         const end = new Date(date);
         end.setHours(23, 59, 59, 999);
-        filter.date = { $gte: start, $lte: end };
+        if (when === 'before') {
+          filter.date = { $lt: start };
+        } else if (when === 'after') {
+          filter.date = { $gt: end };
+        } else {
+          filter.date = { $gte: start, $lte: end };
+        }
       }
       let result;
       const userId = currentUser.sub as string;
@@ -134,6 +156,12 @@ export class AppointmentController {
   async findOne(@Param('id') id: string, @Req() req: any) {
     try {
       const appointment = await this.appointmentService.findOne(id);
+      if (!appointment) {
+        throw new HttpException(
+          'Appointment not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
       const currentUser = req.user;
       if (!this.canAccessAppointment(currentUser, appointment)) {
         throw new HttpException(
@@ -181,6 +209,8 @@ export class AppointmentController {
         );
       }
       let updateData: any = {};
+      let notifyUserId: string | null = null;
+      let notifyRole: 'doctor' | 'patient' | null = null;
       if (currentUser.role === UserRole.Doctor) {
         if (String(appointment.doctor._id) !== String(currentUser.sub)) {
           throw new HttpException(
@@ -197,6 +227,8 @@ export class AppointmentController {
         Object.keys(updateData).forEach(
           (key) => updateData[key] === undefined && delete updateData[key],
         );
+        notifyUserId = appointment.patient._id?.toString();
+        notifyRole = 'patient';
       } else if (currentUser.role === UserRole.Patient) {
         if (String(appointment.patient._id) !== String(currentUser.sub)) {
           throw new HttpException(
@@ -214,6 +246,8 @@ export class AppointmentController {
           }
           updateData.date = patientDto.date;
         }
+        notifyUserId = appointment.doctor._id?.toString();
+        notifyRole = 'doctor';
       }
       if (Object.keys(updateData).length === 0) {
         throw new HttpException(
@@ -225,6 +259,14 @@ export class AppointmentController {
         id,
         updateData,
       );
+      // Notify the other party
+      if (notifyUserId && notifyRole) {
+        await this.notificationService.create({
+          recipient: notifyUserId,
+          title: 'Appointment Updated',
+          message: `Your appointment was updated by the ${notifyRole}.`
+        });
+      }
       return {
         success: true,
         message: 'Appointment updated successfully',
