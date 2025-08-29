@@ -241,7 +241,7 @@ export class AppointmentController {
     }
   }
 
-  @Roles(UserRole.Patient)
+  @Roles(UserRole.Patient, UserRole.Admin)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete appointment (Patient only)' })
   @ApiParam({ name: 'id', description: 'Appointment ID' })
@@ -252,17 +252,20 @@ export class AppointmentController {
     try {
       const appointment = await this.appointmentService.findOne(id);
       const currentUser = req.user;
-      if (String(appointment.patient._id) !== String(currentUser.sub)) {
-        throw new HttpException(
-          'You can only delete your own appointments',
-          HttpStatus.FORBIDDEN,
-        );
-      }
-      if (!this.canModifyAppointmentDate(appointment.date)) {
-        throw new HttpException(
-          'You can only delete appointments at least 24 hours before the appointment time',
-          HttpStatus.FORBIDDEN,
-        );
+
+      if (currentUser.role !== UserRole.Admin) {
+        if (String(appointment.patient._id) !== String(currentUser.sub)) {
+          throw new HttpException(
+            'You can only delete your own appointments',
+            HttpStatus.FORBIDDEN,
+          );
+        }
+        if (!this.canModifyAppointmentDate(appointment.date)) {
+          throw new HttpException(
+            'You can only delete appointments at least 24 hours before the appointment time',
+            HttpStatus.FORBIDDEN,
+          );
+        }
       }
       const deletedAppointment = await this.appointmentService.remove(id);
       return {
