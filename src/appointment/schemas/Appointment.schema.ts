@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { AppointmentStatus } from 'src/common/types';
 
 export type AppointmentDocument = Appointment & Document;
 
@@ -36,6 +37,8 @@ export class Appointment {
 
   @Prop()
   followUpDate: Date;
-}
 
+  @Prop({ default: AppointmentStatus.SCHEDULED, enum: AppointmentStatus })
+  status: AppointmentStatus;
+}
 export const AppointmentSchema = SchemaFactory.createForClass(Appointment);
