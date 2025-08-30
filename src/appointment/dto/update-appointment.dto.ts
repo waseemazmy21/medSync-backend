@@ -73,13 +73,14 @@ export class UpdateAppointmentByDoctorDto {
 
   @ApiProperty({
     description: 'Prescription details',
-    type: () => UpdatePrescriptionDto,
+    type: () => [UpdatePrescriptionDto],
     required: false,
+    isArray: true,
   })
   @IsOptional()
-  @ValidateNested()
+  @ValidateNested({ each: true })
   @Type(() => UpdatePrescriptionDto)
-  prescription?: UpdatePrescriptionDto;
+  prescription?: UpdatePrescriptionDto[];
 
   @ApiProperty({
     description: 'Follow-up date for the appointment',

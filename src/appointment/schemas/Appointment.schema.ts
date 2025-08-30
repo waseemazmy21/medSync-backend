@@ -32,8 +32,8 @@ export class Appointment {
   @Prop({ maxlength: 500 })
   notes: string;
 
-  @Prop({ type: PrescriptionSchema })
-  prescription: Prescription;
+  @Prop({ type: [PrescriptionSchema] })
+  prescription: Prescription[];
 
   @Prop()
   followUpDate: Date;
