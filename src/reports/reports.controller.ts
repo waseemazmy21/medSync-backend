@@ -1,10 +1,10 @@
+
 import { Controller, Get, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { RolesGuard } from '../rbac/roles.guard';
 import { Roles } from '../rbac/roles.decorator';
 import { ApiTags, ApiQuery, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { IsDateString, IsOptional, IsString, ValidateIf, registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsDateString, IsOptional, registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
 import { UserRole } from '../common/types';
 
 function IsFromBeforeTo(property: string, validationOptions?: ValidationOptions) {
@@ -46,51 +46,43 @@ class PeriodQuery {
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
-  @Get('doctor-performance')
-  @ApiOperation({ summary: 'Get doctor performance report' })
-  @ApiQuery({ name: 'doctorId', required: true, type: String })
-  @ApiQuery({ name: 'from', required: false, type: String, description: 'Start date (ISO 8601)' })
-  @ApiQuery({ name: 'to', required: false, type: String, description: 'End date (ISO 8601)' })
-  @ApiResponse({ status: 200, description: 'Doctor performance report' })
-  async getDoctorPerformance(
-    @Query('doctorId') doctorId: string,
+  /**
+   * Get a general AI-powered performance report for all reviews.
+   *
+   * @param period Optional period filter with 'from' and 'to' ISO 8601 date strings.
+   * @returns General performance report including AI summary, average rating, and total reviews.
+   */
+  @Get('performance')
+  @ApiOperation({ summary: 'Get general performance report (AI-powered)', description: 'Returns an AI-generated summary of overall hospital performance, trends, and suggestions based on all patient reviews.' })
+  @ApiQuery({ name: 'from', required: false, type: String, description: 'Start date (ISO 8601, optional)' })
+  @ApiQuery({ name: 'to', required: false, type: String, description: 'End date (ISO 8601, optional)' })
+  @ApiResponse({ status: 200, description: 'General performance report', schema: { example: { averageRating: 4.2, totalReviews: 120, aiSummary: 'The overall sentiment is positive. Patients appreciate...' } } })
+  async getPerformanceReport(
     @Query() period: PeriodQuery
   ) {
-    if (!doctorId) throw new BadRequestException('doctorId is required');
     if (period.from && period.to && new Date(period.from) > new Date(period.to)) {
       throw new BadRequestException("'from' date must be before 'to' date");
     }
-    return this.reportsService.getDoctorPerformance(doctorId, period.from, period.to);
+    return this.reportsService.getPerformanceReport(period.from, period.to);
   }
 
-  @Get('department-performance')
-  @ApiOperation({ summary: 'Get department performance report' })
-  @ApiQuery({ name: 'departmentId', required: true, type: String })
-  @ApiQuery({ name: 'from', required: false, type: String, description: 'Start date (ISO 8601)' })
-  @ApiQuery({ name: 'to', required: false, type: String, description: 'End date (ISO 8601)' })
-  @ApiResponse({ status: 200, description: 'Department performance report' })
-  async getDepartmentPerformance(
-    @Query('departmentId') departmentId: string,
-    @Query() period: PeriodQuery
-  ) {
-    if (!departmentId) throw new BadRequestException('departmentId is required');
-    if (period.from && period.to && new Date(period.from) > new Date(period.to)) {
-      throw new BadRequestException("'from' date must be before 'to' date");
-    }
-    return this.reportsService.getDepartmentPerformance(departmentId, period.from, period.to);
-  }
-
-  @Get('recurring-complaints')
-  @ApiOperation({ summary: 'Get recurring complaints and suggestions' })
-  @ApiQuery({ name: 'from', required: false, type: String, description: 'Start date (ISO 8601)' })
-  @ApiQuery({ name: 'to', required: false, type: String, description: 'End date (ISO 8601)' })
-  @ApiResponse({ status: 200, description: 'Recurring complaints and suggestions' })
-  async getRecurringComplaints(
+  /**
+   * Get a report of common complaints and suggestions (AI-powered) for all reviews.
+   *
+   * @param period Optional period filter with 'from' and 'to' ISO 8601 date strings.
+   * @returns AI-generated list of recurring complaints, suggestions, and trends.
+   */
+  @Get('complaints')
+  @ApiOperation({ summary: 'Get common complaints and suggestions (AI-powered)', description: 'Returns an AI-generated list of recurring complaints, suggestions, and trends from all patient reviews.' })
+  @ApiQuery({ name: 'from', required: false, type: String, description: 'Start date (ISO 8601, optional)' })
+  @ApiQuery({ name: 'to', required: false, type: String, description: 'End date (ISO 8601, optional)' })
+  @ApiResponse({ status: 200, description: 'Common complaints and suggestions report', schema: { example: { recurringComplaints: '- Long waiting times\n- Unclear instructions\n- ...' } } })
+  async getComplaintsReport(
     @Query() period: PeriodQuery
   ) {
     if (period.from && period.to && new Date(period.from) > new Date(period.to)) {
       throw new BadRequestException("'from' date must be before 'to' date");
     }
-    return this.reportsService.getRecurringComplaints(period.from, period.to);
+    return this.reportsService.getComplaintsReport(period.from, period.to);
   }
 }

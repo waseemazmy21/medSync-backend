@@ -1,3 +1,4 @@
+
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
@@ -7,28 +8,12 @@ export type ReportCacheDocument = ReportCache & Document;
 @Schema({ timestamps: true })
 export class ReportCache extends Document {
   @ApiProperty({
-    description: "Type of report ('doctor', 'department', or 'complaints')",
-    example: 'doctor',
+    description: "Type of report ('performance' or 'complaints')",
+    example: 'performance',
     required: true,
   })
   @Prop({ required: true })
-  type: string; // 'doctor' | 'department' | 'complaints'
-
-  @ApiProperty({
-    description: 'Doctor ID (if applicable)',
-    example: '64e2b7c1f1a2b3c4d5e6f7a8',
-    required: false,
-  })
-  @Prop({ required: false })
-  doctorId?: string;
-
-  @ApiProperty({
-    description: 'Department ID (if applicable)',
-    example: '64e2b7c1f1a2b3c4d5e6f7b9',
-    required: false,
-  })
-  @Prop({ required: false })
-  departmentId?: string;
+  type: string; // 'performance' | 'complaints'
 
   @ApiProperty({
     description: 'Start date for the report period (ISO 8601)',
