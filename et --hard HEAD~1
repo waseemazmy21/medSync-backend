@@ -1,0 +1,73 @@
+[33mbfbd097[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Revert "✨feat(review): get reviews of a specific doctor/department in a specific time period."
+[33me3e9b03[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat(appointment): make prescription array
+[33m1618935[m refactor(appointment): change permissions to make admin can delete any appointment
+[33m89cb1d4[m refactor: add canceld status to appointment
+[33m139adf2[m Merge pull request #12 from waseemazmy21/feature/reports-service
+[33mec6efba[m feat(appointments): add appointment status
+[33m2fa6202[m[33m ([m[1;31morigin/feature/reports-service[m[33m)[m Merge branch 'feature/reports-service' of https://github.com/waseemazmy21/medSync-backend into feature/reports-service
+[33mca89d7f[m ✨feat(reports): add a module that creates reports about doctors/departments on a specific time-period.
+[33md7fa5a9[m ✨feat(reports): add a module that creates reports about doctors/departments on a specific time-period.
+[33mc0c06ad[m ✨feat(review): get reviews of a specific doctor/department in a specific time period.
+[33m874250a[m feat(appointment): assign doctor to appointment based on department
+[33m5f8d9af[m refactor(department): update department controller methods
+[33ma6ed9d8[m feat(deaprtment): add doctors and aviableDays virtuals
+[33m48323d4[m feat: add appointmentFee to Department and virtuals for reviews and staff count
+[33mc5fe691[m feat(department): add virtual fields for staffCount and numberOfReviews - Added virtual field 'staffCount' to Department schema to count associated staff members. - Added virtual field 'numberOfReviews' to Department schema to count associated reviews. - Updated department service to populate these virtual fields when fetching departments.
+[33m144b282[m Merge pull request #11 from waseemazmy21/dto-appointments
+[33m2b2622e[m[33m ([m[1;31morigin/dto-appointments[m[33m)[m 📅 add filter by date option
+[33me46899b[m refactor(auth): use skip auth for login and register only
+[33mfc69e54[m feat(auth): add /me endpoint
+[33mad8e0ac[m 📝 add UpdatePrescriptionDTO
+[33mb8957a9[m ✂️ add pagination to appointments.
+[33m28420ee[m 🩸Remove doctor from create-appointment DTO and create-appointment request
+[33mab9c800[m Separate DTO uptade commit in a separate branch.
+[33mff3a7ce[m refactor(department): make Get /departments endpoint availble for all roles.
+[33m90a4a85[m Merge branch 'main' of github.com:waseemazmy21/medSync-backend
+[33mbc950aa[m fix(user): move password hashing to schema
+[33m3d4cc5e[m Merge pull request #10 from waseemazmy21/fix/appointment
+[33m68496a0[m[33m ([m[1;31morigin/fix/appointment[m[33m)[m 🥅 add error handling to the appointment DTOs
+[33m92f38e8[m feat(user): add updatePatient endpoint, unify update endpoints, and fix DTO PartialType usage - add updatePatient endpoint in user controller and service - Updated doctor, nurse, and staff update endpoints to return consistent response structure - Fixed DTOs to use PartialType from @nestjs/mapped-types instead of @nestjs/swagger
+[33ma174069[m feat(notification): add endpoint to fetch all notifications for a user
+[33mb9ce402[m chore(cors): enable CORS
+[33m1072ebf[m feat(reviews): enhance DTOs, validation, and update logic
+[33m14484e4[m[33m ([m[1;32mfeat/review[m[33m)[m add notifications
+[33m52776f7[m feat(user): make seperate create and update funtions for each role
+[33m940365c[m solve merge conflicts
+[33md8a25e0[m Merge pull request #8 from waseemazmy21/testing/department-api
+[33m9dfe4fd[m Merge pull request #7 from waseemazmy21/testing/appointment-api
+[33m72d47d9[m Merge pull request #6 from waseemazmy21/feature/swagger-doc
+[33mbe5df04[m feat(review): add review module
+[33m029465e[m update README.md
+[33mc3d4650[m[33m ([m[1;31morigin/testing/department-api[m[33m)[m 🗃️ fix(department): replace DepartmentManger with Doctor.
+[33m971cf9e[m 🐛fix(auth): add departmentId to the payload.
+[33ma667785[m[33m ([m[1;31morigin/testing/appointment-api[m[33m)[m Merge branch 'testing/appointment-api' of https://github.com/waseemazmy21/medSync-backend into testing/appointment-api
+[33mfe2e860[m 🐛fix(controller): access the user's id in the appointment object, not the user.
+[33m19bf71b[m 🐛 fix(controller): compare the appointment's patient._id to the current users's id, not the whole patient object.
+[33m1437da5[m 🐛 fix(controller): access user id through `user.sub`, not `user._id`
+[33md52ab3f[m 📝 docs: add Swagger to generate api docs
+[33m361c59c[m Merge pull request #5 from waseemazmy21/feature/appointment
+[33mb30f0b1[m[33m ([m[1;31morigin/feature/appointment[m[33m)[m ⚰️ fix(auth): remove redundant AuthGuard calls.
+[33m5dae0b2[m 🐛fix(department): let service recieve custom filters from the controller.
+[33m76ca9ca[m ✨feat(appointment): add Appointment module
+[33m0aefccc[m ⚡️ fix(RBAC): improve access control logic and error handling
+[33m68a6046[m chore: update tasks & schema
+[33m2bc5b63[m Refactor: Adds Arabic fields, updates shift days to numeric
+[33m97b13b4[m[33m ([m[1;32mfeat/department[m[33m)[m feat(Department): update schema and controller responses -add Arabic name fields to department schema -standardize controller responses
+[33md9d5bf2[m Merge pull request #4 from waseemazmy21/feature/auth-RBAC
+[33mc313ed5[m Merge branch 'main' into feature/auth-RBAC
+[33m847c20a[m[33m ([m[1;32mfeature/auth-RBAC[m[33m)[m 🛂 update(auth): add more ownership and authorization rules to department and user services.
+[33me48c2f1[m ✨feat(auth): add @SkipAuth() decorator, for paths not requiring auth.
+[33mbce0df9[m 🛂 feat(RBAC): update user controller to imple
+[33m2ef50b7[m Merge branch 'main' of github.com:waseemazmy21/medSync-backend
+[33m4e4214e[m Adding Todo in readme
+[33m7842b80[m Merge pull request #3 from waseemazmy21/department
+[33ma173d20[m[33m ([m[1;31morigin/department[m[33m, [m[1;32mdepartment[m[33m)[m solve merge conflicts
+[33m1659fab[m Fix(Departmetn): Ensure remove deafult fields form Dto
+[33m4d963d3[m 🚨 fix(pretier): add endOfLine to fix linter errors
+[33mdbc68e8[m feat(auth): implement auth module with register/login endpoints and guard
+[33mda920f4[m created department operation
+[33md4450e7[m Merge pull request #1 from waseemazmy21/getall-get-deleteByElnobey
+[33mbf29a1b[m[33m ([m[1;32mgetall-get-deleteByElnobey[m[33m)[m modify services and controllers to do get - getall and delete operation
+[33m1d03839[m feat: add Department schema and RESTful controller setup
+[33mde91dbd[m feat: setup user schemas, Mongoose and ConfigModule
+[33m8b144de[m Initial commit
