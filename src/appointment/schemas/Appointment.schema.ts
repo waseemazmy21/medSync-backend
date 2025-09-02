@@ -42,3 +42,10 @@ export class Appointment {
   status: AppointmentStatus;
 }
 export const AppointmentSchema = SchemaFactory.createForClass(Appointment);
+
+AppointmentSchema.virtual('review', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'appointment',
+  justOne: true,
+})

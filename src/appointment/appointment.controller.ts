@@ -20,7 +20,7 @@ import {
 } from './dto/update-appointment.dto';
 import { RolesGuard } from 'src/rbac/roles.guard';
 import { Roles } from 'src/rbac/roles.decorator';
-import { UserRole } from 'src/common/types';
+import { AppointmentStatus, UserRole } from 'src/common/types';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { Appointment } from './schemas/Appointment.schema';
 import { Types } from 'mongoose';
@@ -75,20 +75,18 @@ export class AppointmentController {
     @Req() req: any,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
-    @Query('date') date?: string,
+    @Query('status') status?: AppointmentStatus,
   ) {
     try {
       const currentUser = req.user;
       const pageNum = parseInt(page, 10) > 0 ? parseInt(page, 10) : 1;
       const limitNum = parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 10;
+
       let filter: any = {};
-      if (date) {
-        // Filter for the whole day (00:00:00 to 23:59:59)
-        const start = new Date(date);
-        const end = new Date(date);
-        end.setHours(23, 59, 59, 999);
-        filter.date = { $gte: start, $lte: end };
+      if (status) {
+        filter.status = status;
       }
+
       let result;
       const userId = currentUser.sub as string;
       switch (currentUser.role) {
@@ -193,6 +191,8 @@ export class AppointmentController {
           notes: doctorDto.notes,
           prescription: doctorDto.prescription,
           followUpDate: doctorDto.followUpDate,
+          status: doctorDto.status,
+
         };
         Object.keys(updateData).forEach(
           (key) => updateData[key] === undefined && delete updateData[key],
