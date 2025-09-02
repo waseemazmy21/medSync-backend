@@ -191,6 +191,8 @@ export class AppointmentController {
           notes: doctorDto.notes,
           prescription: doctorDto.prescription,
           followUpDate: doctorDto.followUpDate,
+          status: doctorDto.status,
+
         };
         Object.keys(updateData).forEach(
           (key) => updateData[key] === undefined && delete updateData[key],
