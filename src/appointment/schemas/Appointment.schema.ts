@@ -15,7 +15,7 @@ export class Prescription {
 
 export const PrescriptionSchema = SchemaFactory.createForClass(Prescription);
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } })
 export class Appointment {
   @Prop({ required: true })
   date: Date;
