@@ -51,7 +51,6 @@ export class CreateReviewDto {
         example: 'Feedback text',
     })
     @IsString({ message: 'Feedback must be a string' })
-    @IsNotEmpty({ message: 'Feedback is required' })
     @Length(0, 500, { message: 'Feedback must at most 500 charcters' })
     @IsOptional()
     feedback: string;
