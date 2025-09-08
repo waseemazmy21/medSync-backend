@@ -47,12 +47,11 @@ export class CreateReviewDto {
 
     @ApiProperty({
         description: 'Feedback from the patient about the doctor/appointment',
-        minLength: 2,
         maxLength: 500,
         example: 'Feedback text',
     })
     @IsString({ message: 'Feedback must be a string' })
     @IsNotEmpty({ message: 'Feedback is required' })
-    @Length(2, 500, { message: 'Feedback must be between 5 and 500 characters' })
+    @Length(0, 500, { message: 'Feedback must be between 5 and 500 characters' })
     feedback: string;
 }
