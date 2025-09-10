@@ -1,7 +1,7 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Review, ReviewDocument } from './schemas/Review.schema';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
@@ -14,7 +14,14 @@ export class ReviewService {
   ) { }
 
   async create(createReviewDto: CreateReviewDto) {
-    const created = new this.reviewModel(createReviewDto);
+    const created = new this.reviewModel({
+      patient: new Types.ObjectId(createReviewDto.patient),
+      department: new Types.ObjectId(createReviewDto.department),
+      appointment: new Types.ObjectId(createReviewDto.appointment),
+      doctor: new Types.ObjectId(createReviewDto.doctor),
+      rating: createReviewDto.rating,
+      feedback: createReviewDto.feedback,
+    });
     return created.save();
   }
 

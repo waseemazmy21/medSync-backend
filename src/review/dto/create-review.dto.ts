@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsMongoId, IsNotEmpty, IsNumber, IsString, Max, Min, Length } from 'class-validator';
+import { IsMongoId, IsNotEmpty, IsNumber, IsString, Max, Min, Length, IsOptional } from 'class-validator';
 
 export class CreateReviewDto {
     @ApiProperty({
@@ -47,12 +47,11 @@ export class CreateReviewDto {
 
     @ApiProperty({
         description: 'Feedback from the patient about the doctor/appointment',
-        minLength: 2,
         maxLength: 500,
         example: 'Feedback text',
     })
     @IsString({ message: 'Feedback must be a string' })
-    @IsNotEmpty({ message: 'Feedback is required' })
-    @Length(2, 500, { message: 'Feedback must be between 5 and 500 characters' })
+    @Length(0, 500, { message: 'Feedback must at most 500 charcters' })
+    @IsOptional()
     feedback: string;
 }

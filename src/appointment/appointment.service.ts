@@ -35,6 +35,7 @@ export class AppointmentService {
         .populate('patient', 'name email phone')
         .populate('doctor', 'name email phone')
         .populate('department', 'name nameAr')
+        .populate('review', 'rating feedback')
         .sort({ date: 1 })
         .skip(skip)
         .limit(limit)
@@ -54,6 +55,7 @@ export class AppointmentService {
       .populate('patient', 'name email phone')
       .populate('doctor', 'name email phone')
       .populate('department', 'name nameAr')
+      .populate('review', 'rating feedback')
       .exec();
 
     if (!appointment) {

@@ -1,9 +1,13 @@
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsDateString, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { AppointmentStatus } from 'src/common/types';
+
 // Add OpenAPI schemas for frontend codegen
 export const UpdateAppointmentByDoctorDtoOpenAPISchema = {
   type: 'object',
   properties: {
-    status: { type: 'string', enum: ['confirmed', 'completed', 'cancelled'] },
+    status: { type: AppointmentStatus, enum: AppointmentStatus },
     notes: { type: 'string' },
     prescription: { $ref: '#/components/schemas/CreatePrescriptionDto' },
     followUpDate: { type: 'string' },
@@ -17,8 +21,7 @@ export const UpdateAppointmentByPatientDtoOpenAPISchema = {
     notes: { type: 'string' },
   },
 };
-import { IsDateString, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+
 
 export class UpdatePrescriptionDto {
   @ApiProperty({
@@ -51,12 +54,12 @@ export class UpdatePrescriptionDto {
 export class UpdateAppointmentByDoctorDto {
   @ApiProperty({
     description: 'Status of the appointment',
-    enum: ['confirmed', 'completed', 'cancelled'],
+    enum: AppointmentStatus,
     required: false,
   })
   @IsOptional()
   @IsString()
-  status?: string;
+  status?: AppointmentStatus;
 
   @ApiProperty({
     description: 'Doctor notes for the appointment',
@@ -70,13 +73,14 @@ export class UpdateAppointmentByDoctorDto {
 
   @ApiProperty({
     description: 'Prescription details',
-    type: () => UpdatePrescriptionDto,
+    type: () => [UpdatePrescriptionDto],
     required: false,
+    isArray: true,
   })
   @IsOptional()
-  @ValidateNested()
+  @ValidateNested({ each: true })
   @Type(() => UpdatePrescriptionDto)
-  prescription?: UpdatePrescriptionDto;
+  prescription?: UpdatePrescriptionDto[];
 
   @ApiProperty({
     description: 'Follow-up date for the appointment',
