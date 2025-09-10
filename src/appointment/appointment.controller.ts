@@ -49,10 +49,13 @@ export class AppointmentController {
   ) {
     try {
       const patientId = req.user.sub;
+      console.log('CreateAppointmentDto:', createAppointmentDto);
+      console.log('PatientId:', patientId);
       const appointment = await this.appointmentService.create(
         createAppointmentDto,
         patientId,
       );
+      console.log('Created appointment:', appointment);
       // Notify doctor if assigned
       if (appointment.doctor) {
         await this.notificationService.create({
@@ -67,8 +70,21 @@ export class AppointmentController {
         data: { appointment },
       };
     } catch (error) {
+      console.error('Error creating appointment:', error);
+      // If error is a known HttpException, rethrow it
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      // Custom verbose error for no doctors available
+      if (error?.message?.includes('no doctors available')) {
+        throw new HttpException(
+          'No doctors are available in the selected department. Please choose another department or try again later.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      // Fallback to generic error
       throw new HttpException(
-        'Failed to create appointment',
+        error?.message || 'Failed to create appointment',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -112,6 +128,7 @@ export class AppointmentController {
         } else {
           filter.date = { $gte: start, $lte: end };
         }
+      }
       if (status) {
         filter.status = status;
       }
@@ -123,11 +140,26 @@ export class AppointmentController {
           result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         case UserRole.Doctor:
-          filter.doctor = new Types.ObjectId(userId);
+          // Ensure userId is a valid ObjectId string
+          let doctorObjectId;
+          if (Types.ObjectId.isValid(userId)) {
+            doctorObjectId = new Types.ObjectId(userId);
+          } else {
+            console.warn('Doctor userId is not a valid ObjectId:', userId);
+            doctorObjectId = userId;
+          }
+          filter.doctor = doctorObjectId;
           result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         case UserRole.Patient:
-          filter.patient = new Types.ObjectId(userId);
+          let patientObjectId;
+          if (Types.ObjectId.isValid(userId)) {
+            patientObjectId = new Types.ObjectId(userId);
+          } else {
+            console.warn('Patient userId is not a valid ObjectId:', userId);
+            patientObjectId = userId;
+          }
+          filter.patient = patientObjectId;
           result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         default:
@@ -160,7 +192,10 @@ export class AppointmentController {
   @ApiResponse({ status: 500, description: 'Failed to retrieve appointment' })
   async findOne(@Param('id') id: string, @Req() req: any) {
     try {
+      console.log('findOne called with id:', id);
+      console.log('Is valid ObjectId:', require('mongoose').Types.ObjectId.isValid(id));
       const appointment = await this.appointmentService.findOne(id);
+      console.log('findOne result:', appointment);
       if (!appointment) {
         throw new HttpException(
           'Appointment not found',
@@ -180,6 +215,7 @@ export class AppointmentController {
         data: { appointment },
       };
     } catch (error) {
+      console.error('Error in findOne:', error);
       if (error instanceof HttpException) {
         throw error;
       }
@@ -224,13 +260,16 @@ export class AppointmentController {
           );
         }
         const doctorDto = updateDto as UpdateAppointmentByDoctorDto;
-        updateData = {
-          notes: doctorDto.notes,
-          prescription: doctorDto.prescription,
-          followUpDate: doctorDto.followUpDate,
-          status: doctorDto.status,
-
-        };
+        updateData.notes = doctorDto.notes;
+        updateData.followUpDate = doctorDto.followUpDate;
+        updateData.status = doctorDto.status;
+        // Ensure prescription is always an array of objects
+        if (doctorDto.prescription && Array.isArray(doctorDto.prescription)) {
+          updateData.prescription = doctorDto.prescription.map(p => ({
+            medicine: p.medicine,
+            dose: p.dose
+          }));
+        }
         Object.keys(updateData).forEach(
           (key) => updateData[key] === undefined && delete updateData[key],
         );
@@ -245,13 +284,18 @@ export class AppointmentController {
         }
         const patientDto = updateDto as UpdateAppointmentByPatientDto;
         if (patientDto.date) {
+          // Ensure date is valid and at least 24 hours before appointment
+          const newDate = new Date(patientDto.date);
+          if (isNaN(newDate.getTime())) {
+            throw new HttpException('Invalid date format', HttpStatus.BAD_REQUEST);
+          }
           if (!this.canModifyAppointmentDate(appointment.date)) {
             throw new HttpException(
               'You can only modify appointment date at least 24 hours before the appointment',
               HttpStatus.FORBIDDEN,
             );
           }
-          updateData.date = patientDto.date;
+          updateData.date = newDate;
         }
         notifyUserId = appointment.doctor._id?.toString();
         notifyRole = 'doctor';
@@ -299,9 +343,10 @@ export class AppointmentController {
   @ApiResponse({ status: 500, description: 'Failed to delete appointment' })
   async remove(@Param('id') id: string, @Req() req: any) {
     try {
+      console.log('Entered AppointmentController.remove endpoint with id:', id);
       const appointment = await this.appointmentService.findOne(id);
       const currentUser = req.user;
-
+      console.log('Remove appointment called by user:', currentUser);
       if (currentUser.role !== UserRole.Admin) {
         if (String(appointment.patient._id) !== String(currentUser.sub)) {
           throw new HttpException(

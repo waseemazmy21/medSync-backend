@@ -4,13 +4,15 @@ import { AppointmentService } from './appointment.service';
 import { AppointmentController } from './appointment.controller';
 import { Appointment, AppointmentSchema } from './schemas/Appointment.schema';
 import { DepartmentModule } from 'src/department/department.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Appointment.name, schema: AppointmentSchema }
     ]),
-    DepartmentModule
+  DepartmentModule,
+  NotificationModule
   ],
   controllers: [AppointmentController],
   providers: [AppointmentService],
