@@ -24,12 +24,16 @@ import { AppointmentStatus, UserRole } from 'src/common/types';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { Appointment } from './schemas/Appointment.schema';
 import { Types } from 'mongoose';
+import { NotificationService } from '../notification/notification.service';
 
 @ApiTags('Appointment')
 @UseGuards(RolesGuard)
 @Controller('appointment')
 export class AppointmentController {
-  constructor(private readonly appointmentService: AppointmentService) { }
+  constructor(
+    private readonly appointmentService: AppointmentService,
+    private readonly notificationService: NotificationService,
+  ) { }
 
   // A patient can book an appointment
   @Roles(UserRole.Patient)
@@ -49,14 +53,35 @@ export class AppointmentController {
         createAppointmentDto,
         patientId,
       );
+      // Notify doctor if assigned
+      if (appointment.doctor) {
+        await this.notificationService.create({
+          recipient: appointment.doctor.toString(),
+          title: 'New Appointment Assigned',
+          message: `You have been assigned a new appointment with patient.`
+        });
+      }
       return {
         success: true,
         message: 'Appointment created successfully',
         data: { appointment },
       };
     } catch (error) {
+      console.error('Error creating appointment:', error);
+      // If error is a known HttpException, rethrow it
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      // Custom verbose error for no doctors available
+      if (error?.message?.includes('no doctors available')) {
+        throw new HttpException(
+          'No doctors are available in the selected department. Please choose another department or try again later.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      // Fallback to generic error
       throw new HttpException(
-        'Failed to create appointment',
+        error?.message || 'Failed to create appointment',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -71,10 +96,13 @@ export class AppointmentController {
   @ApiQuery({ name: 'page', required: false, description: 'Page number', example: 1 })
   @ApiQuery({ name: 'limit', required: false, description: 'Number of items per page', example: 10 })
   @ApiQuery({ name: 'date', required: false, description: 'Filter by appointment date (YYYY-MM-DD)', example: '2025-09-01' })
+  @ApiQuery({ name: 'when', required: false, description: "Filter by 'before' or 'after' the date", example: 'before' })
   async findAll(
     @Req() req: any,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('date') date?: string,
+    @Query('when') when?: 'before' | 'after',
     @Query('status') status?: AppointmentStatus,
   ) {
     try {
@@ -83,6 +111,21 @@ export class AppointmentController {
       const limitNum = parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 10;
 
       let filter: any = {};
+      if (date) {
+        const start = new Date(date);
+        if (isNaN(start.getTime())) {
+          throw new HttpException('Invalid date format', HttpStatus.BAD_REQUEST);
+        }
+        const end = new Date(date);
+        end.setHours(23, 59, 59, 999);
+        if (when === 'before') {
+          filter.date = { $lt: start };
+        } else if (when === 'after') {
+          filter.date = { $gt: end };
+        } else {
+          filter.date = { $gte: start, $lte: end };
+        }
+      }
       if (status) {
         filter.status = status;
       }
@@ -94,11 +137,26 @@ export class AppointmentController {
           result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         case UserRole.Doctor:
-          filter.doctor = new Types.ObjectId(userId);
+          // Ensure userId is a valid ObjectId string
+          let doctorObjectId;
+          if (Types.ObjectId.isValid(userId)) {
+            doctorObjectId = new Types.ObjectId(userId);
+          } else {
+            console.warn('Doctor userId is not a valid ObjectId:', userId);
+            doctorObjectId = userId;
+          }
+          filter.doctor = doctorObjectId;
           result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         case UserRole.Patient:
-          filter.patient = new Types.ObjectId(userId);
+          let patientObjectId;
+          if (Types.ObjectId.isValid(userId)) {
+            patientObjectId = new Types.ObjectId(userId);
+          } else {
+            console.warn('Patient userId is not a valid ObjectId:', userId);
+            patientObjectId = userId;
+          }
+          filter.patient = patientObjectId;
           result = await this.appointmentService.findAll(filter, pageNum, limitNum);
           break;
         default:
@@ -132,6 +190,12 @@ export class AppointmentController {
   async findOne(@Param('id') id: string, @Req() req: any) {
     try {
       const appointment = await this.appointmentService.findOne(id);
+      if (!appointment) {
+        throw new HttpException(
+          'Appointment not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
       const currentUser = req.user;
       if (!this.canAccessAppointment(currentUser, appointment)) {
         throw new HttpException(
@@ -145,6 +209,7 @@ export class AppointmentController {
         data: { appointment },
       };
     } catch (error) {
+      console.error('Error in findOne:', error);
       if (error instanceof HttpException) {
         throw error;
       }
@@ -179,6 +244,8 @@ export class AppointmentController {
         );
       }
       let updateData: any = {};
+      let notifyUserId: string | null = null;
+      let notifyRole: 'doctor' | 'patient' | null = null;
       if (currentUser.role === UserRole.Doctor) {
         if (String(appointment.doctor._id) !== String(currentUser.sub)) {
           throw new HttpException(
@@ -187,16 +254,21 @@ export class AppointmentController {
           );
         }
         const doctorDto = updateDto as UpdateAppointmentByDoctorDto;
-        updateData = {
-          notes: doctorDto.notes,
-          prescription: doctorDto.prescription,
-          followUpDate: doctorDto.followUpDate,
-          status: doctorDto.status,
-
-        };
+        updateData.notes = doctorDto.notes;
+        updateData.followUpDate = doctorDto.followUpDate;
+        updateData.status = doctorDto.status;
+        // Ensure prescription is always an array of objects
+        if (doctorDto.prescription && Array.isArray(doctorDto.prescription)) {
+          updateData.prescription = doctorDto.prescription.map(p => ({
+            medicine: p.medicine,
+            dose: p.dose
+          }));
+        }
         Object.keys(updateData).forEach(
           (key) => updateData[key] === undefined && delete updateData[key],
         );
+        notifyUserId = appointment.patient._id?.toString();
+        notifyRole = 'patient';
       } else if (currentUser.role === UserRole.Patient) {
         if (String(appointment.patient._id) !== String(currentUser.sub)) {
           throw new HttpException(
@@ -206,14 +278,21 @@ export class AppointmentController {
         }
         const patientDto = updateDto as UpdateAppointmentByPatientDto;
         if (patientDto.date) {
+          // Ensure date is valid and at least 24 hours before appointment
+          const newDate = new Date(patientDto.date);
+          if (isNaN(newDate.getTime())) {
+            throw new HttpException('Invalid date format', HttpStatus.BAD_REQUEST);
+          }
           if (!this.canModifyAppointmentDate(appointment.date)) {
             throw new HttpException(
               'You can only modify appointment date at least 24 hours before the appointment',
               HttpStatus.FORBIDDEN,
             );
           }
-          updateData.date = patientDto.date;
+          updateData.date = newDate;
         }
+        notifyUserId = appointment.doctor._id?.toString();
+        notifyRole = 'doctor';
       }
       if (Object.keys(updateData).length === 0) {
         throw new HttpException(
@@ -225,6 +304,14 @@ export class AppointmentController {
         id,
         updateData,
       );
+      // Notify the other party
+      if (notifyUserId && notifyRole) {
+        await this.notificationService.create({
+          recipient: notifyUserId,
+          title: 'Appointment Updated',
+          message: `Your appointment was updated by the ${notifyRole}.`
+        });
+      }
       return {
         success: true,
         message: 'Appointment updated successfully',
@@ -250,9 +337,8 @@ export class AppointmentController {
   @ApiResponse({ status: 500, description: 'Failed to delete appointment' })
   async remove(@Param('id') id: string, @Req() req: any) {
     try {
-      const appointment = await this.appointmentService.findOne(id);
-      const currentUser = req.user;
-
+  const appointment = await this.appointmentService.findOne(id);
+  const currentUser = req.user;
       if (currentUser.role !== UserRole.Admin) {
         if (String(appointment.patient._id) !== String(currentUser.sub)) {
           throw new HttpException(
