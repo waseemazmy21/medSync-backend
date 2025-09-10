@@ -49,13 +49,10 @@ export class AppointmentController {
   ) {
     try {
       const patientId = req.user.sub;
-      console.log('CreateAppointmentDto:', createAppointmentDto);
-      console.log('PatientId:', patientId);
       const appointment = await this.appointmentService.create(
         createAppointmentDto,
         patientId,
       );
-      console.log('Created appointment:', appointment);
       // Notify doctor if assigned
       if (appointment.doctor) {
         await this.notificationService.create({
@@ -192,10 +189,7 @@ export class AppointmentController {
   @ApiResponse({ status: 500, description: 'Failed to retrieve appointment' })
   async findOne(@Param('id') id: string, @Req() req: any) {
     try {
-      console.log('findOne called with id:', id);
-      console.log('Is valid ObjectId:', require('mongoose').Types.ObjectId.isValid(id));
       const appointment = await this.appointmentService.findOne(id);
-      console.log('findOne result:', appointment);
       if (!appointment) {
         throw new HttpException(
           'Appointment not found',
@@ -343,10 +337,8 @@ export class AppointmentController {
   @ApiResponse({ status: 500, description: 'Failed to delete appointment' })
   async remove(@Param('id') id: string, @Req() req: any) {
     try {
-      console.log('Entered AppointmentController.remove endpoint with id:', id);
-      const appointment = await this.appointmentService.findOne(id);
-      const currentUser = req.user;
-      console.log('Remove appointment called by user:', currentUser);
+  const appointment = await this.appointmentService.findOne(id);
+  const currentUser = req.user;
       if (currentUser.role !== UserRole.Admin) {
         if (String(appointment.patient._id) !== String(currentUser.sub)) {
           throw new HttpException(
