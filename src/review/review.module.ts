@@ -13,5 +13,6 @@ import { Review, ReviewSchema } from './schemas/Review.schema';
   ],
   controllers: [ReviewController],
   providers: [ReviewService],
+  exports: [ReviewService],
 })
 export class ReviewModule { }
