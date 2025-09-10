@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { AppointmentStatus } from 'src/common/types';
 
 export type AppointmentDocument = Appointment & Document;
 
@@ -14,7 +15,7 @@ export class Prescription {
 
 export const PrescriptionSchema = SchemaFactory.createForClass(Prescription);
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } })
 export class Appointment {
   @Prop({ required: true })
   date: Date;
@@ -31,11 +32,20 @@ export class Appointment {
   @Prop({ maxlength: 500 })
   notes: string;
 
-  @Prop({ type: PrescriptionSchema })
-  prescription: Prescription;
+  @Prop({ type: [PrescriptionSchema] })
+  prescription: Prescription[];
 
   @Prop()
   followUpDate: Date;
-}
 
+  @Prop({ default: AppointmentStatus.SCHEDULED, enum: AppointmentStatus })
+  status: AppointmentStatus;
+}
 export const AppointmentSchema = SchemaFactory.createForClass(Appointment);
+
+AppointmentSchema.virtual('review', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'appointment',
+  justOne: true,
+})

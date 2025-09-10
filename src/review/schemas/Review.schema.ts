@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document, Types } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { Appointment } from 'src/appointment/schemas/Appointment.schema';
 import { Department } from 'src/department/schemas/Department.schema';
 import { Doctor } from 'src/user/schemas/Doctor.schema';
@@ -25,7 +25,7 @@ export class Review extends Document {
     @Prop({ type: Number, min: 0, max: 5, required: true })
     rating: number;
 
-    @Prop({ type: String, required: true, minlength: 2, maxlength: 500 })
+    @Prop({ type: String, maxlength: 500 })
     feedback: string;
 }
 

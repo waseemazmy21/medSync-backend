@@ -27,3 +27,9 @@ export enum BloodType {
   O_POS = 'O+',
   O_NEG = 'O-',
 }
+
+export enum AppointmentStatus {
+  SCHEDULED = 'scheduled',
+  COMPLETED = 'completed',
+  CANCELED = 'canceled',
+}
