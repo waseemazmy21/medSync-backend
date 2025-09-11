@@ -14,12 +14,20 @@ export class Notification {
     @Prop({ required: true })
     title: string;
 
+    @Prop({ required: true })
+    titlerAr: string;
+
     @Prop()
     message?: string;
+
+    @Prop()
+    messageAr?: string;
 
     @Prop({ default: false })
     read: boolean;
 
+    @Prop({ default: false })
+    hidden: boolean;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

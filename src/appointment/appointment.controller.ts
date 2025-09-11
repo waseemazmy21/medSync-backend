@@ -22,7 +22,6 @@ import { RolesGuard } from 'src/rbac/roles.guard';
 import { Roles } from 'src/rbac/roles.decorator';
 import { AppointmentStatus, UserRole } from 'src/common/types';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiQuery, ApiParam } from '@nestjs/swagger';
-import { Appointment } from './schemas/Appointment.schema';
 import { Types } from 'mongoose';
 import { NotificationService } from '../notification/notification.service';
 
@@ -54,13 +53,23 @@ export class AppointmentController {
         patientId,
       );
       // Notify doctor if assigned
-      if (appointment.doctor) {
-        await this.notificationService.create({
-          recipient: appointment.doctor.toString(),
-          title: 'New Appointment Assigned',
-          message: `You have been assigned a new appointment with patient.`
-        });
-      }
+      await this.notificationService.create({
+        recipient: appointment.doctor.toString(),
+        title: 'New Appointment Assigned',
+        message: `You have been assigned a new appointment with patient.`,
+        titlerAr: 'موعد جديد تم تعيينه',
+        messageAr: 'تم تعيين موعد جديد مع المريض.'
+      });
+
+      // Notify patient
+      await this.notificationService.create({
+        recipient: patientId,
+        title: 'Appointment Booked',
+        message: `Your appointment has been booked successfully.`,
+        titlerAr: 'تم حجز الموعد',
+        messageAr: 'تم حجز موعدك بنجاح.'
+      });
+
       return {
         success: true,
         message: 'Appointment created successfully',
@@ -309,7 +318,9 @@ export class AppointmentController {
         await this.notificationService.create({
           recipient: notifyUserId,
           title: 'Appointment Updated',
-          message: `Your appointment was updated by the ${notifyRole}.`
+          message: `Your appointment was updated by the ${notifyRole}.`,
+          titlerAr: 'تم تحديث الموعد',
+          messageAr: `تم تحديث موعدك بواسطة ${notifyRole === 'doctor' ? 'الطبيب' : 'المريض'}.`
         });
       }
       return {
@@ -337,8 +348,8 @@ export class AppointmentController {
   @ApiResponse({ status: 500, description: 'Failed to delete appointment' })
   async remove(@Param('id') id: string, @Req() req: any) {
     try {
-  const appointment = await this.appointmentService.findOne(id);
-  const currentUser = req.user;
+      const appointment = await this.appointmentService.findOne(id);
+      const currentUser = req.user;
       if (currentUser.role !== UserRole.Admin) {
         if (String(appointment.patient._id) !== String(currentUser.sub)) {
           throw new HttpException(

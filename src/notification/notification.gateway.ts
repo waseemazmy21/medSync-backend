@@ -10,20 +10,23 @@ import { Server, Socket } from 'socket.io';
 import { Inject, forwardRef } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { Notification } from './schemas/notification.schema';
+import { ConfigService } from '@nestjs/config';
 
-@WebSocketGateway(80, {
-  namespace: 'notification'
+@WebSocketGateway({
+  namespace: 'notification',
+  cors: true
 })
 export class NotificationGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
   constructor(
     @Inject(forwardRef(() => NotificationService))
-    private readonly notificationService: NotificationService
+    private readonly notificationService: NotificationService,
+    private readonly configService: ConfigService
   ) { }
 
   afterInit(server: Server) {
-    console.log('WebSocket server initialized');
+    console.log('Notification Gateway Initialized');
   }
 
   handleConnection(client: Socket) {
