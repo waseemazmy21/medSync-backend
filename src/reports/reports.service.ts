@@ -53,12 +53,40 @@ export class ReportsService {
             throw new InternalServerErrorException(err.message || 'Failed to generate department report. Please try again later.');
         }
         try {
-            await this.reportCacheModel.create({ ...cacheKey, ...report });
+            await this.reportCacheModel.create({
+                ...cacheKey,
+                ...report,
+                department: new Types.ObjectId(departmentId)
+            });
+
         } catch (err) {
-            // Don't block report delivery if caching fails
             return report;
         }
         return report;
+    }
+
+    async getAllDepartmentReports(departmentId: string, page = 1, limit = 10) {
+        const reviews = await this.reviewService.findByDepartment(departmentId);
+        const skip = (page - 1) * limit;
+        const [reports, total] = await Promise.all([
+            this.reportCacheModel.find({ department: new Types.ObjectId(departmentId) })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            this.reportCacheModel.countDocuments({ department: new Types.ObjectId(departmentId) })
+        ]);
+
+        return {
+            reports,
+            totalReports: total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            totalReviews: reviews.length,
+            averageRating: reviews.length ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length) : 0,
+
+        };
     }
 
     private async generateDepartmentReport(reviews: any[]): Promise<{

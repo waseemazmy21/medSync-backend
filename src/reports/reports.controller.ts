@@ -42,17 +42,11 @@ class PeriodQuery {
 @ApiTags('Reports')
 @Controller('reports')
 @UseGuards(RolesGuard)
-@Roles(UserRole.Admin)
+@Roles(UserRole.Doctor)
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) { }
 
-  /**
-   * Get a department report (AI-powered) for a specific department or all reviews.
-   * @param departmentId Optional department Mongo ID to filter reviews.
-   * @param period Optional period filter with 'from' and 'to' ISO 8601 date strings.
-   * @returns Department report including overview, pros, cons, average rating, and total reviews.
-   */
-  @Get('department/:id')
+  @Get('departments/:id/generate')
   @ApiOperation({ summary: 'Get department report (AI-powered)', description: 'Returns an AI-generated report for a specific department or all reviews, including overview, pros, cons, average rating, and total reviews.' })
   @ApiQuery({ name: 'departmentId', required: false, type: String, description: 'Department Mongo ID (optional)' })
   @ApiQuery({ name: 'from', required: false, type: String, description: 'Start date (ISO 8601, optional)' })
@@ -67,5 +61,18 @@ export class ReportsController {
       throw new BadRequestException("'from' date must be before 'to' date");
     }
     return this.reportsService.getDepartmentReport(id, from, to);
+  }
+
+  @Get('departments/:id')
+  @ApiOperation({ summary: 'Get all department reports (paginated)', description: 'Returns paginated department reports.' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 10)' })
+  @ApiResponse({ status: 200, description: 'Paginated department reports', schema: { example: { data: [{ overview: '...', pros: ['...'], cons: ['...'], averageRating: 4.2, totalReviews: 120 }], total: 20, page: 1, limit: 10 } } })
+  async getAllDepartmentReports(
+    @Param('id') id: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.reportsService.getAllDepartmentReports(id, page, limit);
   }
 }
