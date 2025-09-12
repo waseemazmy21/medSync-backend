@@ -60,7 +60,14 @@ export class ReportsController {
     if (from && to && new Date(from) > new Date(to)) {
       throw new BadRequestException("'from' date must be before 'to' date");
     }
-    return this.reportsService.getDepartmentReport(id, from, to);
+    const report = await this.reportsService.getDepartmentReport(id, from, to);
+    return {
+      success: true,
+      message: "Report generated successfully",
+      data: {
+        report
+      }
+    }
   }
 
   @Get('departments/:id')
@@ -73,6 +80,10 @@ export class ReportsController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ) {
-    return this.reportsService.getAllDepartmentReports(id, page, limit);
+    const data = await this.reportsService.getAllDepartmentReports(id, page, limit);
+    return {
+      message: "Reports retrieved successfully",
+      data
+    }
   }
 }
