@@ -1,5 +1,5 @@
 
-import { Controller, Get, Query, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, BadRequestException, Param } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { RolesGuard } from '../rbac/roles.guard';
 import { Roles } from '../rbac/roles.decorator';
@@ -44,45 +44,28 @@ class PeriodQuery {
 @UseGuards(RolesGuard)
 @Roles(UserRole.Admin)
 export class ReportsController {
-  constructor(private readonly reportsService: ReportsService) {}
+  constructor(private readonly reportsService: ReportsService) { }
 
   /**
-   * Get a general AI-powered performance report for all reviews.
-   *
+   * Get a department report (AI-powered) for a specific department or all reviews.
+   * @param departmentId Optional department Mongo ID to filter reviews.
    * @param period Optional period filter with 'from' and 'to' ISO 8601 date strings.
-   * @returns General performance report including AI summary, average rating, and total reviews.
+   * @returns Department report including overview, pros, cons, average rating, and total reviews.
    */
-  @Get('performance')
-  @ApiOperation({ summary: 'Get general performance report (AI-powered)', description: 'Returns an AI-generated summary of overall hospital performance, trends, and suggestions based on all patient reviews.' })
+  @Get('department/:id')
+  @ApiOperation({ summary: 'Get department report (AI-powered)', description: 'Returns an AI-generated report for a specific department or all reviews, including overview, pros, cons, average rating, and total reviews.' })
+  @ApiQuery({ name: 'departmentId', required: false, type: String, description: 'Department Mongo ID (optional)' })
   @ApiQuery({ name: 'from', required: false, type: String, description: 'Start date (ISO 8601, optional)' })
   @ApiQuery({ name: 'to', required: false, type: String, description: 'End date (ISO 8601, optional)' })
-  @ApiResponse({ status: 200, description: 'General performance report', schema: { example: { averageRating: 4.2, totalReviews: 120, aiSummary: 'The overall sentiment is positive. Patients appreciate...' } } })
-  async getPerformanceReport(
-    @Query() period: PeriodQuery
+  @ApiResponse({ status: 200, description: 'Department report', schema: { example: { overview: '...', pros: ['...'], cons: ['...'], averageRating: 4.2, totalReviews: 120 } } })
+  async getDepartmentReport(
+    @Param('id') id: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
   ) {
-    if (period.from && period.to && new Date(period.from) > new Date(period.to)) {
+    if (from && to && new Date(from) > new Date(to)) {
       throw new BadRequestException("'from' date must be before 'to' date");
     }
-    return this.reportsService.getPerformanceReport(period.from, period.to);
-  }
-
-  /**
-   * Get a report of common complaints and suggestions (AI-powered) for all reviews.
-   *
-   * @param period Optional period filter with 'from' and 'to' ISO 8601 date strings.
-   * @returns AI-generated list of recurring complaints, suggestions, and trends.
-   */
-  @Get('complaints')
-  @ApiOperation({ summary: 'Get common complaints and suggestions (AI-powered)', description: 'Returns an AI-generated list of recurring complaints, suggestions, and trends from all patient reviews.' })
-  @ApiQuery({ name: 'from', required: false, type: String, description: 'Start date (ISO 8601, optional)' })
-  @ApiQuery({ name: 'to', required: false, type: String, description: 'End date (ISO 8601, optional)' })
-  @ApiResponse({ status: 200, description: 'Common complaints and suggestions report', schema: { example: { recurringComplaints: '- Long waiting times\n- Unclear instructions\n- ...' } } })
-  async getComplaintsReport(
-    @Query() period: PeriodQuery
-  ) {
-    if (period.from && period.to && new Date(period.from) > new Date(period.to)) {
-      throw new BadRequestException("'from' date must be before 'to' date");
-    }
-    return this.reportsService.getComplaintsReport(period.from, period.to);
+    return this.reportsService.getDepartmentReport(id, from, to);
   }
 }
