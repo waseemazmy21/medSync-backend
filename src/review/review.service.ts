@@ -56,4 +56,8 @@ export class ReviewService {
     if (!deleted) throw new NotFoundException('Review not found');
     return deleted;
   }
+
+  async findByDepartment(departmentId: string) {
+    return this.reviewModel.find({ department: new Types.ObjectId(departmentId) });
+  }
 }
