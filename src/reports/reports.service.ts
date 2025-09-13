@@ -43,9 +43,15 @@ export class ReportsService {
         let reviews;
         try {
             reviews = await this.reviewService.findByDepartment(departmentId)
+
         } catch (err) {
             throw new InternalServerErrorException('Failed to retrieve patient reviews for report generation.');
         }
+
+        if (!reviews || reviews.length === 0) {
+            throw new BadRequestException('Not enough reviews to generate a report')
+        }
+
         let report;
         try {
             report = await this.generateDepartmentReport(reviews);
@@ -126,6 +132,7 @@ export class ReportsService {
                     },
                 }
             );
+
             const data = response.data as any;
             if (!data.choices || !data.choices[0]?.message?.content) {
                 throw new Error('AI response was incomplete or malformed.');
@@ -133,16 +140,15 @@ export class ReportsService {
 
 
             const content = data.choices[0].message.content;
+            console.log(content)
+
 
             const match = content.match(/```json\s*([\s\S]*?)\s*```/);
+            console.log(match)
 
             if (!match) {
                 throw new Error("No JSON block found in markdown");
             }
-
-            console.log('--------------------------------');
-            console.log(match[1]);
-            console.log('--------------------------------');
 
             const report = JSON.parse(match[1]);
 
@@ -161,14 +167,7 @@ export class ReportsService {
 
         } catch (error) {
             console.log(error);
-            // Always return the correct structure, even on error
-            return {
-                overview: 'Failed to generate report.',
-                pros: [],
-                cons: [],
-                totalReviews: reviews.length,
-                averageRating: reviews.length ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length) : 0,
-            };
+            throw new InternalServerErrorException("Failed to generate report")
         }
     }
 }
